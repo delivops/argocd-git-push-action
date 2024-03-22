@@ -1,0 +1,29 @@
+name: 'update argo cd repository'
+description: 'update argo cd repository'
+author: 'DelivOps'
+
+branding:
+  icon: 'heart'
+  color: 'red'
+
+inputs:
+  cluster_name:
+    description: 'The name of the cluster'
+    required: true
+  applications:
+    description: 'The applications to deploy, separated by ;'
+    required: true
+  project_name:
+    description: 'The name of the project'
+    required: true
+  tag:
+    description: 'The tag of the image to deploy'
+    required: true
+  github-token:
+    description: 'Github token'
+    required: false
+    default: '${{ github.token }}'
+
+runs:
+  using: node20
+  main: dist/index.js
