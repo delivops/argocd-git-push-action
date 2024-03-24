@@ -69,27 +69,41 @@ export async function commitAndPushChanges(
     const octokit = github.getOctokit(githubToken)
     const g = octokit.rest.git
     const ref = `heads/${branchName}`
+
     const {
       data: {
         object: { sha: commit_sha }
       }
     } = await g.getRef({ owner, repo, ref })
+
     const {
       data: {
         tree: { sha: base_tree }
       }
     } = await g.getCommit({ owner, repo, commit_sha })
-    const filesTree = filesPath.map(path => {
-      return {
-        path,
-        mode: '100644' as const,
-        type: 'blob' as const,
-        content: fs.readFileSync(path).toString('base64')
-      }
-    })
+
+    const filesTree = await Promise.all(
+      filesPath.map(async path => {
+        const content = fs.readFileSync(path)
+        const { data } = await g.createBlob({
+          owner,
+          repo,
+          content: content.toString(),
+          encoding: 'utf-8'
+        })
+        return {
+          path,
+          mode: '100644' as const,
+          type: 'blob' as const,
+          sha: data.sha
+        }
+      })
+    )
+
     const {
       data: { sha: tree }
     } = await g.createTree({ owner, repo, base_tree, tree: filesTree })
+
     const {
       data: { sha }
     } = await g.createCommit({
@@ -99,6 +113,7 @@ export async function commitAndPushChanges(
       tree,
       parents: [commit_sha]
     })
+
     await g.updateRef({ owner, repo, ref, sha })
   } catch (error) {
     core.setFailed(

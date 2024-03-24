@@ -29104,14 +29104,21 @@ async function commitAndPushChanges(filesPath, branchName, message, githubToken)
         const ref = `heads/${branchName}`;
         const { data: { object: { sha: commit_sha } } } = await g.getRef({ owner, repo, ref });
         const { data: { tree: { sha: base_tree } } } = await g.getCommit({ owner, repo, commit_sha });
-        const filesTree = filesPath.map(path => {
+        const filesTree = await Promise.all(filesPath.map(async (path) => {
+            const content = fs.readFileSync(path);
+            const { data } = await g.createBlob({
+                owner,
+                repo,
+                content: content.toString(),
+                encoding: 'utf-8'
+            });
             return {
                 path,
                 mode: '100644',
                 type: 'blob',
-                content: fs.readFileSync(path).toString('base64')
+                sha: data.sha
             };
-        });
+        }));
         const { data: { sha: tree } } = await g.createTree({ owner, repo, base_tree, tree: filesTree });
         const { data: { sha } } = await g.createCommit({
             owner,
