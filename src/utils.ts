@@ -32,7 +32,7 @@ export async function updateYamlFiles(
     core.info(`Updating application ${application} file.`)
     const applicationFilePath = `env/${clusterName}/${projectName}/${application}.yaml`
     updateApplicationTagInFile(applicationFilePath, tag)
-    // filesPath.push(applicationFilePath)
+    filesPath.push(applicationFilePath)
   }
   return filesPath
 }
@@ -47,7 +47,7 @@ async function updateApplicationTagInFile(filePath: string, tag: string) {
       data.setIn(imageTagPath.split('.'), tag)
       const newYaml = data.toString()
       core.info(`New yaml content: \n${newYaml}`)
-      // fs.writeFileSync(filePath, newYaml, { encoding: 'utf8' })
+      fs.writeFileSync(filePath, newYaml)
     } else {
       throw new Error(`The path ${imageTagPath} does not exist in ${filePath}`)
     }
