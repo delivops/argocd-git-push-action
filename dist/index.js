@@ -29127,6 +29127,12 @@ async function commitAndPushChanges(filesPath, branchName, message, githubToken)
             tree,
             parents: [commit_sha]
         });
+        // Ensure the local branch is up-to-date
+        const { data: { object: { sha: latestSha } } } = await await g.getRef({ owner, repo, ref: `heads/${branchName}` });
+        // If the latest SHA differs, we need to rebase or merge
+        if (latestSha !== commit_sha) {
+            await g.updateRef({ owner, repo, ref, sha: latestSha });
+        }
         await g.updateRef({ owner, repo, ref, sha });
     }
     catch (error) {
@@ -37474,7 +37480,7 @@ const falseTag = {
     identify: value => value === false,
     default: true,
     tag: 'tag:yaml.org,2002:bool',
-    test: /^(?:N|n|[Nn]o|NO|[Ff]alse|FALSE|[Oo]ff|OFF)$/i,
+    test: /^(?:N|n|[Nn]o|NO|[Ff]alse|FALSE|[Oo]ff|OFF)$/,
     resolve: () => new Scalar.Scalar(false),
     stringify: boolStringify
 };

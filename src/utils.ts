@@ -37,7 +37,10 @@ export async function updateYamlFiles(
   return filesPath
 }
 
-async function updateApplicationTagInFile(filePath: string, tag: string) {
+async function updateApplicationTagInFile(
+  filePath: string,
+  tag: string
+): Promise<void> {
   try {
     const fileContents = fs.readFileSync(filePath, { encoding: 'utf8' })
     const data = yaml.parseDocument(fileContents)
@@ -116,9 +119,11 @@ export async function commitAndPushChanges(
 
     // Ensure the local branch is up-to-date
     const {
-      data: { sha: latestSha }
-    } = await g.getRef({ owner, repo, ref: `heads/${branchName}` })
-    
+      data: {
+        object: { sha: latestSha }
+      }
+    } = await await g.getRef({ owner, repo, ref: `heads/${branchName}` })
+
     // If the latest SHA differs, we need to rebase or merge
     if (latestSha !== commit_sha) {
       await g.updateRef({ owner, repo, ref, sha: latestSha })
