@@ -114,6 +114,16 @@ export async function commitAndPushChanges(
       parents: [commit_sha]
     })
 
+    // Ensure the local branch is up-to-date
+    const {
+      data: { sha: latestSha }
+    } = await g.getRef({ owner, repo, ref: `heads/${branchName}` })
+    
+    // If the latest SHA differs, we need to rebase or merge
+    if (latestSha !== commit_sha) {
+      await g.updateRef({ owner, repo, ref, sha: latestSha })
+    }
+
     await g.updateRef({ owner, repo, ref, sha })
   } catch (error) {
     core.setFailed(
