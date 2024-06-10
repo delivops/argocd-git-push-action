@@ -1,18 +1,15 @@
 # Argo CD Git Push GitHub Action
 
-This GitHub Action update your argocd application by pushing the changes to the
-git repository.
+This GitHub Action update your argocd application by pushing the changes to the git repository.
 
 ## Features
 
-- Synchronize an Argo CD application by pushing the changes to the git
-  repository.
+- Synchronize an Argo CD application by pushing the changes to the git repository.
 
 ## Prerequisites
 
-Before you can use this action, you need to have the following: A github
-repository with the argocd application configuration files in the following
-structure on the `main` branch:
+Before you can use this action, you need to have the following: A github repository with the argocd application
+configuration files in the following structure on the `main` branch:
 
 ```
 env/
@@ -41,8 +38,8 @@ TODO
 
 ## Contributing
 
-Contributions to this project are welcome! Please submit issues and pull
-requests for any feature enhancements, bug fixes, or improvements.
+Contributions to this project are welcome! Please submit issues and pull requests for any feature enhancements, bug
+fixes, or improvements.
 
 ## License
 
