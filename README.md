@@ -33,6 +33,7 @@ Here are the detailed inputs for the action.
 | project_name | The name of your project                                                                          | Yes      |
 | tag          | The new tag of your app.                                                                          | Yes      |
 | github-token | Github token. (default to default github token)                                                   | No       |
+| retries      | Number of retries before fails (default: 1)                                                       | No       |
 
 ## Usage
 

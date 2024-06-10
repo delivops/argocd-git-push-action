@@ -19,7 +19,8 @@ export function getInputs(): {
     projectName: core.getInput('project_name', { required: true }),
     githubToken: core.getInput('github-token', { required: true }),
     tag: core.getInput('tag', { required: true }),
-    branchName: process.env.GITHUB_HEAD_REF || 'main'
+    branchName: process.env.GITHUB_HEAD_REF || 'main',
+    retries: core.getInput('retries', { required: false })
   } as const
 }
 
@@ -37,7 +38,7 @@ export async function updateYamlFiles(
     updateApplicationTagInFile(applicationFilePath, tag)
     filesPath.push(applicationFilePath)
   }
-  
+
   return filesPath
 }
 
@@ -65,7 +66,8 @@ export async function commitAndPushChanges(
   filesPath: string[],
   branchName: string,
   message: string,
-  githubToken: string
+  githubToken: string,
+  retries?: string
 ): Promise<void> {
   const { owner, repo } = github.context.repo
   const octokit = github.getOctokit(githubToken)
@@ -73,8 +75,9 @@ export async function commitAndPushChanges(
   const ref = `heads/${branchName}`
 
   let attempt = 0
+  const maxAttempts = parseInt(retries || "1", 10)
 
-  while (attempt < config.maxAttempts) {
+  while (attempt < maxAttempts) {
     try {
       attempt++
       const commitSha = await CommitAndPushUtils.getLatestCommitSha(g, owner, repo, ref)
@@ -90,9 +93,9 @@ export async function commitAndPushChanges(
       }
       return
     } catch (error) {
-      if (attempt >= config.maxAttempts) {
+      if (attempt >= maxAttempts) {
         core.setFailed(
-          `Failed to commit and push changes after ${config.maxAttempts} attempts: ${(error as Error).message}`
+          `Failed to commit and push changes after ${maxAttempts} attempts: ${(error as Error).message}`
         )
         return
       }
