@@ -1,18 +1,11 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import * as fs from 'fs'
+import { readFile, writeFile } from 'fs/promises'
 import * as yaml from 'yaml'
-import { config } from './config'
 import * as CommitAndPushUtils from './commit-and-push-utils'
+import { Inputs } from './interfaces'
 
-export function getInputs(): {
-  readonly clusterName: string
-  readonly applications: string
-  readonly projectName: string
-  readonly githubToken: string
-  readonly tag: string
-  readonly branchName: string
-} {
+export function getInputs(): Inputs {
   return {
     clusterName: core.getInput('cluster_name', { required: true }),
     applications: core.getInput('applications', { required: true }),
@@ -20,7 +13,7 @@ export function getInputs(): {
     githubToken: core.getInput('github-token', { required: true }),
     tag: core.getInput('tag', { required: true }),
     branchName: process.env.GITHUB_HEAD_REF || 'main',
-    retries: core.getInput('retries', { required: false })
+    retries: core.getInput('retries') || '1'
   } as const
 }
 
@@ -43,8 +36,10 @@ export async function updateYamlFiles(
 }
 
 async function updateApplicationTagInFile(filePath: string, tag: string): Promise<void> {
+  const encoding = 'utf-8'
+
   try {
-    const fileContents = fs.readFileSync(filePath, { encoding: 'utf8' })
+    const fileContents = await readFile(filePath, encoding)
     const data = yaml.parseDocument(fileContents)
     const imageTagPath = 'spec.source.helm.valuesObject.image.tag'
     const imageTagNode = data.getIn(imageTagPath.split('.'))
@@ -52,8 +47,8 @@ async function updateApplicationTagInFile(filePath: string, tag: string): Promis
     if (imageTagNode) {
       data.setIn(imageTagPath.split('.'), tag)
       const newYaml = data.toString()
-      core.info(`New yaml content: \n${newYaml}`)
-      fs.writeFileSync(filePath, newYaml)
+      core.info(`New YAML content for ${filePath}: \n${newYaml}`)
+      await writeFile(filePath, newYaml, encoding)
     } else {
       throw new Error(`The path ${imageTagPath} does not exist in ${filePath}`)
     }
@@ -67,7 +62,7 @@ export async function commitAndPushChanges(
   branchName: string,
   message: string,
   githubToken: string,
-  retries?: string
+  retries: string
 ): Promise<void> {
   const { owner, repo } = github.context.repo
   const octokit = github.getOctokit(githubToken)
@@ -75,11 +70,13 @@ export async function commitAndPushChanges(
   const ref = `heads/${branchName}`
 
   let attempt = 0
-  const maxAttempts = parseInt(retries || "1", 10)
+  const maxAttempts = parseInt(retries, 10)
 
   while (attempt < maxAttempts) {
     try {
       attempt++
+      core.info(`Attempt ${attempt} to commit and push changes.`)
+
       const commitSha = await CommitAndPushUtils.getLatestCommitSha(g, owner, repo, ref)
       const baseTree = await CommitAndPushUtils.getBaseTree(g, owner, repo, commitSha)
       const treeSha = await CommitAndPushUtils.createFilesTree(g, owner, repo, filesPath, baseTree)
@@ -91,16 +88,16 @@ export async function commitAndPushChanges(
       } else {
         await g.updateRef({ owner, repo, ref, sha: commitShaNew })
       }
+
+      core.info(`Successfully committed and pushed changes on attempt ${attempt}.`)
       return
     } catch (error) {
       if (attempt >= maxAttempts) {
-        core.setFailed(
-          `Failed to commit and push changes after ${maxAttempts} attempts: ${(error as Error).message}`
-        )
+        core.setFailed(`Failed to commit and push changes after ${maxAttempts} attempts: ${(error as Error).message}`)
         return
       }
-      const backoffTime = CommitAndPushUtils.calculateBackoffTime(attempt)
 
+      const backoffTime = CommitAndPushUtils.calculateBackoffTime(attempt)
       core.warning(`Attempt ${attempt} failed. Retrying in ${backoffTime} seconds...`)
       await new Promise(resolve => setTimeout(resolve, backoffTime * 1000))
     }

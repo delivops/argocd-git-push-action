@@ -23,6 +23,10 @@ inputs:
     description: 'Github token'
     required: false
     default: '${{ github.token }}'
+  retries:
+    description: 'Number of retries'
+    required: false
+    default: '1'
 
 runs:
   using: node20
