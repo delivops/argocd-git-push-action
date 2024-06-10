@@ -1,0 +1,10 @@
+{
+    "prettier.configPath": ".prettierrc.json",
+    "prettier.printWidth": 120,
+    "prettier.trailingComma": "none",
+    "prettier.singleQuote": true,
+    "prettier.semi": false,
+    "prettier.bracketSameLine": true,
+    "prettier.arrowParens": "avoid",
+    "prettier.proseWrap": "always"
+}

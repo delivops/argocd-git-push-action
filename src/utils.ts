@@ -2,6 +2,8 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as fs from 'fs'
 import * as yaml from 'yaml'
+import { config } from './config'
+import * as CommitAndPushUtils from './commit-and-push-utils'
 
 export function getInputs(): {
   readonly clusterName: string
@@ -28,24 +30,24 @@ export async function updateYamlFiles(
   tag: string
 ): Promise<string[]> {
   const filesPath: string[] = []
+
   for (const application of applications.split(';')) {
     core.info(`Updating application ${application} file.`)
     const applicationFilePath = `env/${clusterName}/${projectName}/${application}.yaml`
     updateApplicationTagInFile(applicationFilePath, tag)
     filesPath.push(applicationFilePath)
   }
+  
   return filesPath
 }
 
-async function updateApplicationTagInFile(
-  filePath: string,
-  tag: string
-): Promise<void> {
+async function updateApplicationTagInFile(filePath: string, tag: string): Promise<void> {
   try {
     const fileContents = fs.readFileSync(filePath, { encoding: 'utf8' })
     const data = yaml.parseDocument(fileContents)
     const imageTagPath = 'spec.source.helm.valuesObject.image.tag'
     const imageTagNode = data.getIn(imageTagPath.split('.'))
+
     if (imageTagNode) {
       data.setIn(imageTagPath.split('.'), tag)
       const newYaml = data.toString()
@@ -55,9 +57,7 @@ async function updateApplicationTagInFile(
       throw new Error(`The path ${imageTagPath} does not exist in ${filePath}`)
     }
   } catch (error) {
-    core.setFailed(
-      `Failed to update application tag in file ${filePath}: ${(error as Error).message}`
-    )
+    core.setFailed(`Failed to update application tag in file ${filePath}: ${(error as Error).message}`)
   }
 }
 
@@ -67,72 +67,39 @@ export async function commitAndPushChanges(
   message: string,
   githubToken: string
 ): Promise<void> {
-  try {
-    const { owner, repo } = github.context.repo
-    const octokit = github.getOctokit(githubToken)
-    const g = octokit.rest.git
-    const ref = `heads/${branchName}`
+  const { owner, repo } = github.context.repo
+  const octokit = github.getOctokit(githubToken)
+  const g = octokit.rest.git
+  const ref = `heads/${branchName}`
 
-    const {
-      data: {
-        object: { sha: commit_sha }
+  let attempt = 0
+
+  while (attempt < config.maxAttempts) {
+    try {
+      attempt++
+      const commitSha = await CommitAndPushUtils.getLatestCommitSha(g, owner, repo, ref)
+      const baseTree = await CommitAndPushUtils.getBaseTree(g, owner, repo, commitSha)
+      const treeSha = await CommitAndPushUtils.createFilesTree(g, owner, repo, filesPath, baseTree)
+      const commitShaNew = await CommitAndPushUtils.createCommit(g, owner, repo, message, treeSha, commitSha)
+      const latestSha = await CommitAndPushUtils.getLatestCommitSha(g, owner, repo, ref)
+
+      if (latestSha !== commitSha) {
+        await CommitAndPushUtils.rebaseAndPush(g, owner, repo, ref, treeSha, latestSha, message)
+      } else {
+        await g.updateRef({ owner, repo, ref, sha: commitShaNew })
       }
-    } = await g.getRef({ owner, repo, ref })
-
-    const {
-      data: {
-        tree: { sha: base_tree }
+      return
+    } catch (error) {
+      if (attempt >= config.maxAttempts) {
+        core.setFailed(
+          `Failed to commit and push changes after ${config.maxAttempts} attempts: ${(error as Error).message}`
+        )
+        return
       }
-    } = await g.getCommit({ owner, repo, commit_sha })
+      const backoffTime = CommitAndPushUtils.calculateBackoffTime(attempt)
 
-    const filesTree = await Promise.all(
-      filesPath.map(async path => {
-        const content = fs.readFileSync(path)
-        const { data } = await g.createBlob({
-          owner,
-          repo,
-          content: content.toString(),
-          encoding: 'utf-8'
-        })
-        return {
-          path,
-          mode: '100644' as const,
-          type: 'blob' as const,
-          sha: data.sha
-        }
-      })
-    )
-
-    const {
-      data: { sha: tree }
-    } = await g.createTree({ owner, repo, base_tree, tree: filesTree })
-
-    const {
-      data: { sha }
-    } = await g.createCommit({
-      owner,
-      repo,
-      message,
-      tree,
-      parents: [commit_sha]
-    })
-
-    // Ensure the local branch is up-to-date
-    const {
-      data: {
-        object: { sha: latestSha }
-      }
-    } = await await g.getRef({ owner, repo, ref: `heads/${branchName}` })
-
-    // If the latest SHA differs, we need to rebase or merge
-    if (latestSha !== commit_sha) {
-      await g.updateRef({ owner, repo, ref, sha: latestSha })
+      core.warning(`Attempt ${attempt} failed. Retrying in ${backoffTime} seconds...`)
+      await new Promise(resolve => setTimeout(resolve, backoffTime * 1000))
     }
-
-    await g.updateRef({ owner, repo, ref, sha })
-  } catch (error) {
-    core.setFailed(
-      `Failed to commit and push changes: ${(error as Error).message}`
-    )
   }
 }
