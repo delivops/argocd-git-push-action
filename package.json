@@ -34,7 +34,7 @@
     "package:watch": "yarn package -- --watch",
     "test": "npx jest",
     "all": "yarn format:write && yarn lint && yarn test && yarn coverage && yarn package",
-    "release": "yarn all && git add . && git commit -m 'chore: release' && git push && bash ./scripts/release.sh"
+    "release": "yarn all && git add . && git commit -m 'chore: release' && git push && bash ./scripts/release"
   },
   "license": "MIT",
   "jest": {
