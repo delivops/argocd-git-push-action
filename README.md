@@ -1,3 +1,5 @@
+![Coverage](badges/coverage.svg)
+
 # Argo CD Git Push GitHub Action
 
 This GitHub Action update your argocd application by pushing the changes to the git repository.
@@ -19,22 +21,26 @@ env/
 
 ```
 
+Note: folder `env` can have alternative names: `clusters` or `environments` (defined in config.clustersFolderNames)
+
 ## Inputs
 
 Here are the detailed inputs for the action.
 
-| Input        | Description                                                                                       | Required |
-| ------------ | ------------------------------------------------------------------------------------------------- | -------- |
-| cluster_name | The name of your Kubernetes cluster.                                                              | Yes      |
-| applications | The name of the Argo CD application(s) to synchronize (for multiple applications, split with ';') | Yes      |
-| project_name | The name of your project                                                                          | Yes      |
-| tag          | The new tag of your app.                                                                          | Yes      |
-| github-token | Github token. (default to default github token)                                                   | No       |
-| retries      | Number of retries before fails (default: 1)                                                       | No       |
+| Input        | Description                                                               | Required |
+| ------------ | ------------------------------------------------------------------------- | -------- |
+| cluster_name | The name of your Kubernetes cluster.                                      | Yes      |
+| applications | The name(s) of the Argo CD application(s) to sync (split with ';' or ',') | Yes      |
+| project_name | The name of your project                                                  | Yes      |
+| tag          | The new tag of your app.                                                  | Yes      |
+| github-token | Github token. (default to default github token)                           | No       |
+| retries      | Number of retries before fails (default: 1)                               | No       |
 
 ## Usage
 
-TODO
+Retry mechanism uses backoff timeout:
+`config.baseBackoffTime * attempt + Math.floor(Math.random() * config.randomBackoffTime)` This randomness is used to
+avoid multiple actions to retry at the same time.
 
 ## Contributing
 

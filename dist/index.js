@@ -29263,7 +29263,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.config = void 0;
 exports.config = {
     baseBackoffTime: 5,
-    randomBackoffTime: 5
+    randomBackoffTime: 5,
+    clustersFolderNames: ['env', 'clusters', 'environments']
 };
 
 
@@ -29306,7 +29307,10 @@ async function run() {
         const { clusterName, projectName, applications, tag, branchName, githubToken, retries } = (0, utils_1.getInputs)();
         core.info(`Updating YAML files for applications: ${applications}`);
         const filesPath = await (0, utils_1.updateYamlFiles)(clusterName, projectName, applications, tag);
-        const message = `in ${clusterName}: Update ${applications.split(';').join(', ')} to ${tag}`;
+        if (filesPath.length === 0) {
+            throw new Error('No valid files found to update');
+        }
+        const message = `in ${clusterName}: Update ${(0, utils_1.splitApplications)(applications).join(', ')} to ${tag}`;
         core.info(`Committing and pushing changes with message: "${message}"`);
         await (0, utils_1.commitAndPushChanges)(filesPath, branchName, message, githubToken, retries);
     }
@@ -29347,40 +29351,88 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.commitAndPushChanges = exports.updateYamlFiles = exports.getInputs = void 0;
+exports.splitApplications = exports.commitAndPushChanges = exports.updateYamlFiles = exports.getInputs = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
-const promises_1 = __nccwpck_require__(3292);
+const promises_1 = __importDefault(__nccwpck_require__(3292));
 const yaml = __importStar(__nccwpck_require__(4083));
 const CommitAndPushUtils = __importStar(__nccwpck_require__(2226));
+const config_1 = __nccwpck_require__(6373);
 function getInputs() {
-    return {
+    const inputs = {
         clusterName: core.getInput('cluster_name', { required: true }),
         applications: core.getInput('applications', { required: true }),
         projectName: core.getInput('project_name', { required: true }),
         githubToken: core.getInput('github-token', { required: true }),
         tag: core.getInput('tag', { required: true }),
         branchName: process.env.GITHUB_HEAD_REF || 'main',
-        retries: core.getInput('retries') || '1'
+        retries: core.getInput('retries') ?? '1'
     };
+    if (!inputs.clusterName || !inputs.applications || !inputs.projectName || !inputs.githubToken || !inputs.tag) {
+        core.setFailed('Action failed with error: Missing required inputs.');
+    }
+    if (!parseInt(inputs.retries, 10)) {
+        core.setFailed('Action failed with error: Invalid retries value.');
+    }
+    return inputs;
 }
 exports.getInputs = getInputs;
 async function updateYamlFiles(clusterName, projectName, applications, tag) {
     const filesPath = [];
-    for (const application of applications.split(';')) {
+    const applicationList = (0, exports.splitApplications)(applications);
+    let foundClustersFolderName = null;
+    for (const application of applicationList) {
         core.info(`Updating application ${application} file.`);
-        const applicationFilePath = `env/${clusterName}/${projectName}/${application}.yaml`;
-        updateApplicationTagInFile(applicationFilePath, tag);
-        filesPath.push(applicationFilePath);
+        const applicationFilePath = await findValidFilePath(clusterName, projectName, application, foundClustersFolderName);
+        if (applicationFilePath) {
+            try {
+                await updateApplicationTagInFile(applicationFilePath, tag);
+                foundClustersFolderName = applicationFilePath.split('/')[0]; // Save the folder name for the next iteration
+            }
+            catch (error) {
+                core.setFailed(`Failed to update yaml file ${applicationFilePath}: ${error.message}`);
+            }
+            filesPath.push(applicationFilePath);
+        }
+        else {
+            core.setFailed(`No valid folder found for application ${application}`);
+        }
     }
     return filesPath;
 }
 exports.updateYamlFiles = updateYamlFiles;
+async function findValidFilePath(clusterName, projectName, application, knownFolderName) {
+    if (knownFolderName) {
+        const filePath = `${knownFolderName}/${clusterName}/${projectName}/${application}.yaml`;
+        try {
+            await promises_1.default.access(filePath, promises_1.default.constants.R_OK | promises_1.default.constants.W_OK);
+            return filePath;
+        }
+        catch (error) {
+            core.warning(`File ${filePath} not accessible: ${error.message}`);
+        }
+    }
+    for (const folderName of config_1.config.clustersFolderNames) {
+        const filePath = `${folderName}/${clusterName}/${projectName}/${application}.yaml`;
+        try {
+            await promises_1.default.access(filePath, promises_1.default.constants.R_OK | promises_1.default.constants.W_OK);
+            return filePath;
+        }
+        catch (error) {
+            core.warning(`File ${filePath} not accessible: ${error.message}`);
+        }
+    }
+    return null;
+}
 async function updateApplicationTagInFile(filePath, tag) {
     const encoding = 'utf-8';
+    core.info(`Updating application tag in file ${filePath} to ${tag}.`);
     try {
-        const fileContents = await (0, promises_1.readFile)(filePath, encoding);
+        const fileContents = await promises_1.default.readFile(filePath, encoding);
         const data = yaml.parseDocument(fileContents);
         const imageTagPath = 'spec.source.helm.valuesObject.image.tag';
         const imageTagNode = data.getIn(imageTagPath.split('.'));
@@ -29388,14 +29440,15 @@ async function updateApplicationTagInFile(filePath, tag) {
             data.setIn(imageTagPath.split('.'), tag);
             const newYaml = data.toString();
             core.info(`New YAML content for ${filePath}: \n${newYaml}`);
-            await (0, promises_1.writeFile)(filePath, newYaml, encoding);
+            await promises_1.default.writeFile(filePath, newYaml, encoding);
         }
         else {
             throw new Error(`The path ${imageTagPath} does not exist in ${filePath}`);
         }
     }
     catch (error) {
-        core.setFailed(`Failed to update application tag in file ${filePath}: ${error.message}`);
+        core.warning(`Failed to update application tag in file ${filePath}: ${error.message}`);
+        throw error;
     }
 }
 async function commitAndPushChanges(filesPath, branchName, message, githubToken, retries) {
@@ -29426,7 +29479,6 @@ async function commitAndPushChanges(filesPath, branchName, message, githubToken,
         catch (error) {
             if (attempt >= maxAttempts) {
                 core.setFailed(`Failed to commit and push changes after ${maxAttempts} attempts: ${error.message}`);
-                return;
             }
             const backoffTime = CommitAndPushUtils.calculateBackoffTime(attempt);
             core.warning(`Attempt ${attempt} failed. Retrying in ${backoffTime} seconds...`);
@@ -29435,6 +29487,10 @@ async function commitAndPushChanges(filesPath, branchName, message, githubToken,
     }
 }
 exports.commitAndPushChanges = commitAndPushChanges;
+const splitApplications = (applications) => {
+    return applications.split(/[;,]/).map(app => app.trim());
+};
+exports.splitApplications = splitApplications;
 
 
 /***/ }),

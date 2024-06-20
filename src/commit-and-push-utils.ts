@@ -1,9 +1,8 @@
-import * as github from '@actions/github'
 import { readFile } from 'fs/promises'
 import { config } from './config'
 import { G } from './interfaces'
 
-export async function getLatestCommitSha(g: G, owner: string, repo: string, ref: string) {
+export async function getLatestCommitSha(g: G, owner: string, repo: string, ref: string): Promise<string> {
   const {
     data: {
       object: { sha }
@@ -12,7 +11,7 @@ export async function getLatestCommitSha(g: G, owner: string, repo: string, ref:
   return sha
 }
 
-export async function getBaseTree(g: G, owner: string, repo: string, commitSha: string) {
+export async function getBaseTree(g: G, owner: string, repo: string, commitSha: string): Promise<string> {
   const {
     data: {
       tree: { sha }
@@ -21,7 +20,13 @@ export async function getBaseTree(g: G, owner: string, repo: string, commitSha: 
   return sha
 }
 
-export async function createFilesTree(g: G, owner: string, repo: string, filesPath: string[], baseTree: string) {
+export async function createFilesTree(
+  g: G,
+  owner: string,
+  repo: string,
+  filesPath: string[],
+  baseTree: string
+): Promise<string> {
   const encoding = 'utf-8'
 
   const filesTree = await Promise.all(
@@ -45,7 +50,7 @@ export async function createCommit(
   message: string,
   tree: string,
   commitSha: string
-) {
+): Promise<string> {
   const {
     data: { sha }
   } = await g.createCommit({
@@ -67,7 +72,7 @@ export async function rebaseAndPush(
   treeSha: string,
   latestSha: string,
   message: string
-) {
+): Promise<void> {
   const {
     data: { sha: rebasedCommitSha }
   } = await g.createCommit({
@@ -87,6 +92,6 @@ export async function rebaseAndPush(
   })
 }
 
-export function calculateBackoffTime(attempt: number) {
+export function calculateBackoffTime(attempt: number): number {
   return config.baseBackoffTime * attempt + Math.floor(Math.random() * config.randomBackoffTime)
 }
