@@ -1,3 +1,5 @@
+![Coverage](badges/coverage.svg)
+
 # Argo CD Git Push GitHub Action
 
 This GitHub Action update your argocd application by pushing the changes to the git repository.
