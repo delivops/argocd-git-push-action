@@ -39,7 +39,7 @@ jobs:
 
       - name: Install Dependencies
         id: install
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Build dist/ Directory
         id: build
