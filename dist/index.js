@@ -5987,6 +5987,417 @@ exports.Deprecation = Deprecation;
 
 /***/ }),
 
+/***/ 3183:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+var options_1 = __nccwpck_require__(6666);
+var delay_factory_1 = __nccwpck_require__(8348);
+function backOff(request, options) {
+    if (options === void 0) { options = {}; }
+    return __awaiter(this, void 0, void 0, function () {
+        var sanitizedOptions, backOff;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    sanitizedOptions = options_1.getSanitizedOptions(options);
+                    backOff = new BackOff(request, sanitizedOptions);
+                    return [4 /*yield*/, backOff.execute()];
+                case 1: return [2 /*return*/, _a.sent()];
+            }
+        });
+    });
+}
+exports.backOff = backOff;
+var BackOff = /** @class */ (function () {
+    function BackOff(request, options) {
+        this.request = request;
+        this.options = options;
+        this.attemptNumber = 0;
+    }
+    BackOff.prototype.execute = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var e_1, shouldRetry;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!!this.attemptLimitReached) return [3 /*break*/, 7];
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 4, , 6]);
+                        return [4 /*yield*/, this.applyDelay()];
+                    case 2:
+                        _a.sent();
+                        return [4 /*yield*/, this.request()];
+                    case 3: return [2 /*return*/, _a.sent()];
+                    case 4:
+                        e_1 = _a.sent();
+                        this.attemptNumber++;
+                        return [4 /*yield*/, this.options.retry(e_1, this.attemptNumber)];
+                    case 5:
+                        shouldRetry = _a.sent();
+                        if (!shouldRetry || this.attemptLimitReached) {
+                            throw e_1;
+                        }
+                        return [3 /*break*/, 6];
+                    case 6: return [3 /*break*/, 0];
+                    case 7: throw new Error("Something went wrong.");
+                }
+            });
+        });
+    };
+    Object.defineProperty(BackOff.prototype, "attemptLimitReached", {
+        get: function () {
+            return this.attemptNumber >= this.options.numOfAttempts;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    BackOff.prototype.applyDelay = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var delay;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        delay = delay_factory_1.DelayFactory(this.options, this.attemptNumber);
+                        return [4 /*yield*/, delay.apply()];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    return BackOff;
+}());
+//# sourceMappingURL=backoff.js.map
+
+/***/ }),
+
+/***/ 5710:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+var delay_base_1 = __nccwpck_require__(7741);
+var AlwaysDelay = /** @class */ (function (_super) {
+    __extends(AlwaysDelay, _super);
+    function AlwaysDelay() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AlwaysDelay;
+}(delay_base_1.Delay));
+exports.AlwaysDelay = AlwaysDelay;
+//# sourceMappingURL=always.delay.js.map
+
+/***/ }),
+
+/***/ 7741:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+var jitter_factory_1 = __nccwpck_require__(5229);
+var Delay = /** @class */ (function () {
+    function Delay(options) {
+        this.options = options;
+        this.attempt = 0;
+    }
+    Delay.prototype.apply = function () {
+        var _this = this;
+        return new Promise(function (resolve) { return setTimeout(resolve, _this.jitteredDelay); });
+    };
+    Delay.prototype.setAttemptNumber = function (attempt) {
+        this.attempt = attempt;
+    };
+    Object.defineProperty(Delay.prototype, "jitteredDelay", {
+        get: function () {
+            var jitter = jitter_factory_1.JitterFactory(this.options);
+            return jitter(this.delay);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Delay.prototype, "delay", {
+        get: function () {
+            var constant = this.options.startingDelay;
+            var base = this.options.timeMultiple;
+            var power = this.numOfDelayedAttempts;
+            var delay = constant * Math.pow(base, power);
+            return Math.min(delay, this.options.maxDelay);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Delay.prototype, "numOfDelayedAttempts", {
+        get: function () {
+            return this.attempt;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return Delay;
+}());
+exports.Delay = Delay;
+//# sourceMappingURL=delay.base.js.map
+
+/***/ }),
+
+/***/ 8348:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+var skip_first_delay_1 = __nccwpck_require__(4317);
+var always_delay_1 = __nccwpck_require__(5710);
+function DelayFactory(options, attempt) {
+    var delay = initDelayClass(options);
+    delay.setAttemptNumber(attempt);
+    return delay;
+}
+exports.DelayFactory = DelayFactory;
+function initDelayClass(options) {
+    if (!options.delayFirstAttempt) {
+        return new skip_first_delay_1.SkipFirstDelay(options);
+    }
+    return new always_delay_1.AlwaysDelay(options);
+}
+//# sourceMappingURL=delay.factory.js.map
+
+/***/ }),
+
+/***/ 4317:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+var delay_base_1 = __nccwpck_require__(7741);
+var SkipFirstDelay = /** @class */ (function (_super) {
+    __extends(SkipFirstDelay, _super);
+    function SkipFirstDelay() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    SkipFirstDelay.prototype.apply = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, this.isFirstAttempt ? true : _super.prototype.apply.call(this)];
+            });
+        });
+    };
+    Object.defineProperty(SkipFirstDelay.prototype, "isFirstAttempt", {
+        get: function () {
+            return this.attempt === 0;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SkipFirstDelay.prototype, "numOfDelayedAttempts", {
+        get: function () {
+            return this.attempt - 1;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return SkipFirstDelay;
+}(delay_base_1.Delay));
+exports.SkipFirstDelay = SkipFirstDelay;
+//# sourceMappingURL=skip-first.delay.js.map
+
+/***/ }),
+
+/***/ 8571:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+function fullJitter(delay) {
+    var jitteredDelay = Math.random() * delay;
+    return Math.round(jitteredDelay);
+}
+exports.fullJitter = fullJitter;
+//# sourceMappingURL=full.jitter.js.map
+
+/***/ }),
+
+/***/ 5229:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+var full_jitter_1 = __nccwpck_require__(8571);
+var no_jitter_1 = __nccwpck_require__(2585);
+function JitterFactory(options) {
+    switch (options.jitter) {
+        case "full":
+            return full_jitter_1.fullJitter;
+        case "none":
+        default:
+            return no_jitter_1.noJitter;
+    }
+}
+exports.JitterFactory = JitterFactory;
+//# sourceMappingURL=jitter.factory.js.map
+
+/***/ }),
+
+/***/ 2585:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+function noJitter(delay) {
+    return delay;
+}
+exports.noJitter = noJitter;
+//# sourceMappingURL=no.jitter.js.map
+
+/***/ }),
+
+/***/ 6666:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+var defaultOptions = {
+    delayFirstAttempt: false,
+    jitter: "none",
+    maxDelay: Infinity,
+    numOfAttempts: 10,
+    retry: function () { return true; },
+    startingDelay: 100,
+    timeMultiple: 2
+};
+function getSanitizedOptions(options) {
+    var sanitized = __assign(__assign({}, defaultOptions), options);
+    if (sanitized.numOfAttempts < 1) {
+        sanitized.numOfAttempts = 1;
+    }
+    return sanitized;
+}
+exports.getSanitizedOptions = getSanitizedOptions;
+//# sourceMappingURL=options.js.map
+
+/***/ }),
+
 /***/ 1223:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -29188,72 +29599,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 2226:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.calculateBackoffTime = exports.rebaseAndPush = exports.createCommit = exports.createFilesTree = exports.getBaseTree = exports.getLatestCommitSha = void 0;
-const promises_1 = __nccwpck_require__(3292);
-const config_1 = __nccwpck_require__(6373);
-async function getLatestCommitSha(g, owner, repo, ref) {
-    const { data: { object: { sha } } } = await g.getRef({ owner, repo, ref });
-    return sha;
-}
-exports.getLatestCommitSha = getLatestCommitSha;
-async function getBaseTree(g, owner, repo, commitSha) {
-    const { data: { tree: { sha } } } = await g.getCommit({ owner, repo, commit_sha: commitSha });
-    return sha;
-}
-exports.getBaseTree = getBaseTree;
-async function createFilesTree(g, owner, repo, filesPath, baseTree) {
-    const encoding = 'utf-8';
-    const filesTree = await Promise.all(filesPath.map(async (path) => {
-        const content = await (0, promises_1.readFile)(path, encoding);
-        const { data } = await g.createBlob({ owner, repo, content, encoding });
-        return { path, mode: '100644', type: 'blob', sha: data.sha };
-    }));
-    const { data: { sha } } = await g.createTree({ owner, repo, base_tree: baseTree, tree: filesTree });
-    return sha;
-}
-exports.createFilesTree = createFilesTree;
-async function createCommit(g, owner, repo, message, tree, commitSha) {
-    const { data: { sha } } = await g.createCommit({
-        owner,
-        repo,
-        message,
-        tree,
-        parents: [commitSha]
-    });
-    return sha;
-}
-exports.createCommit = createCommit;
-async function rebaseAndPush(g, owner, repo, ref, treeSha, latestSha, message) {
-    const { data: { sha: rebasedCommitSha } } = await g.createCommit({
-        owner,
-        repo,
-        message,
-        tree: treeSha,
-        parents: [latestSha]
-    });
-    await g.updateRef({
-        owner,
-        repo,
-        ref,
-        sha: rebasedCommitSha,
-        force: true
-    });
-}
-exports.rebaseAndPush = rebaseAndPush;
-function calculateBackoffTime(attempt) {
-    return config_1.config.baseBackoffTime * attempt + Math.floor(Math.random() * config_1.config.randomBackoffTime);
-}
-exports.calculateBackoffTime = calculateBackoffTime;
-
-
-/***/ }),
-
 /***/ 6373:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -29262,8 +29607,7 @@ exports.calculateBackoffTime = calculateBackoffTime;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.config = void 0;
 exports.config = {
-    baseBackoffTime: 5,
-    randomBackoffTime: 5,
+    baseBackoffTimeInSeconds: 5,
     clustersFolderNames: ['env', 'clusters', 'environments']
 };
 
@@ -29302,6 +29646,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const utils_1 = __nccwpck_require__(1314);
+const commit_and_push_with_retry_1 = __nccwpck_require__(920);
 async function run() {
     try {
         const { clusterName, projectName, applications, tag, branchName, githubToken, retries } = (0, utils_1.getInputs)();
@@ -29312,10 +29657,10 @@ async function run() {
         }
         const message = `in ${clusterName}: Update ${(0, utils_1.splitApplications)(applications).join(', ')} to ${tag}`;
         core.info(`Committing and pushing changes with message: "${message}"`);
-        await (0, utils_1.commitAndPushChanges)(filesPath, branchName, message, githubToken, retries);
+        await (0, commit_and_push_with_retry_1.commitAndPushWithRetry)(filesPath, branchName, message, githubToken, retries);
     }
     catch (error) {
-        core.setFailed(`Action failed with error: ${error.message}`);
+        core.setFailed(`Action failed with error: ${error}`);
     }
 }
 exports.run = run;
@@ -29355,12 +29700,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.splitApplications = exports.commitAndPushChanges = exports.updateYamlFiles = exports.getInputs = void 0;
+exports.splitApplications = exports.updateYamlFiles = exports.getInputs = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const github = __importStar(__nccwpck_require__(5438));
 const promises_1 = __importDefault(__nccwpck_require__(3292));
 const yaml = __importStar(__nccwpck_require__(4083));
-const CommitAndPushUtils = __importStar(__nccwpck_require__(2226));
 const config_1 = __nccwpck_require__(6373);
 function getInputs() {
     const inputs = {
@@ -29394,7 +29737,7 @@ async function updateYamlFiles(clusterName, projectName, applications, tag) {
                 foundClustersFolderName = applicationFilePath.split('/')[0]; // Save the folder name for the next iteration
             }
             catch (error) {
-                core.setFailed(`Failed to update yaml file ${applicationFilePath}: ${error.message}`);
+                core.setFailed(`Failed to update yaml file ${applicationFilePath}: ${error}`);
             }
             filesPath.push(applicationFilePath);
         }
@@ -29413,7 +29756,7 @@ async function findValidFilePath(clusterName, projectName, application, knownFol
             return filePath;
         }
         catch (error) {
-            core.warning(`File ${filePath} not accessible: ${error.message}`);
+            core.warning(`File ${filePath} not accessible: ${error}`);
         }
     }
     for (const folderName of config_1.config.clustersFolderNames) {
@@ -29423,7 +29766,7 @@ async function findValidFilePath(clusterName, projectName, application, knownFol
             return filePath;
         }
         catch (error) {
-            core.warning(`File ${filePath} not accessible: ${error.message}`);
+            core.warning(`File ${filePath} not accessible: ${error}`);
         }
     }
     return null;
@@ -29447,50 +29790,178 @@ async function updateApplicationTagInFile(filePath, tag) {
         }
     }
     catch (error) {
-        core.warning(`Failed to update application tag in file ${filePath}: ${error.message}`);
+        core.warning(`Failed to update application tag in file ${filePath}: ${error}`);
         throw error;
     }
 }
-async function commitAndPushChanges(filesPath, branchName, message, githubToken, retries) {
-    const { owner, repo } = github.context.repo;
-    const octokit = github.getOctokit(githubToken);
-    const g = octokit.rest.git;
-    const ref = `heads/${branchName}`;
-    let attempt = 0;
-    const maxAttempts = parseInt(retries, 10);
-    while (attempt < maxAttempts) {
-        try {
-            attempt++;
-            core.info(`Attempt ${attempt} to commit and push changes.`);
-            const commitSha = await CommitAndPushUtils.getLatestCommitSha(g, owner, repo, ref);
-            const baseTree = await CommitAndPushUtils.getBaseTree(g, owner, repo, commitSha);
-            const treeSha = await CommitAndPushUtils.createFilesTree(g, owner, repo, filesPath, baseTree);
-            const commitShaNew = await CommitAndPushUtils.createCommit(g, owner, repo, message, treeSha, commitSha);
-            const latestSha = await CommitAndPushUtils.getLatestCommitSha(g, owner, repo, ref);
-            if (latestSha !== commitSha) {
-                await CommitAndPushUtils.rebaseAndPush(g, owner, repo, ref, treeSha, latestSha, message);
-            }
-            else {
-                await g.updateRef({ owner, repo, ref, sha: commitShaNew });
-            }
-            core.info(`Successfully committed and pushed changes on attempt ${attempt}.`);
-            return;
-        }
-        catch (error) {
-            if (attempt >= maxAttempts) {
-                core.setFailed(`Failed to commit and push changes after ${maxAttempts} attempts: ${error.message}`);
-            }
-            const backoffTime = CommitAndPushUtils.calculateBackoffTime(attempt);
-            core.warning(`Attempt ${attempt} failed. Retrying in ${backoffTime} seconds...`);
-            await new Promise(resolve => setTimeout(resolve, backoffTime * 1000));
-        }
-    }
-}
-exports.commitAndPushChanges = commitAndPushChanges;
 const splitApplications = (applications) => {
     return applications.split(/[;,]/).map(app => app.trim());
 };
 exports.splitApplications = splitApplications;
+
+
+/***/ }),
+
+/***/ 4826:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.commitAndPushChanges = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const GitUtils = __importStar(__nccwpck_require__(9955));
+async function commitAndPushChanges(g, owner, repo, ref, filesPath, message) {
+    const commitSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref);
+    const baseTree = await GitUtils.getBaseTree(g, owner, repo, commitSha);
+    const treeSha = await GitUtils.createFilesTree(g, owner, repo, filesPath, baseTree);
+    const commitShaNew = await GitUtils.createCommit(g, owner, repo, message, treeSha, commitSha);
+    const latestSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref);
+    let sha = commitShaNew;
+    let force = false;
+    if (latestSha !== commitSha) {
+        console.warn('The branch has been updated since we last fetched the latest commit sha.');
+        // Rebasing the changes on top of the latest commit
+        sha = await GitUtils.createCommit(g, owner, repo, message, treeSha, latestSha);
+        force = true;
+    }
+    await g.updateRef({ owner, repo, ref, sha, force });
+    core.info('Successfully committed and pushed changes.');
+}
+exports.commitAndPushChanges = commitAndPushChanges;
+
+
+/***/ }),
+
+/***/ 920:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.commitAndPushWithRetry = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+const exponential_backoff_1 = __nccwpck_require__(3183);
+const config_1 = __nccwpck_require__(6373);
+const commit_and_push_changes_1 = __nccwpck_require__(4826);
+async function commitAndPushWithRetry(filesPath, branchName, message, githubToken, retries) {
+    const { owner, repo } = github.context.repo;
+    const octokit = github.getOctokit(githubToken);
+    const g = octokit.rest.git;
+    const ref = `heads/${branchName}`;
+    const maxAttempts = parseInt(retries, 10) + 1; // Include the initial attempt
+    const options = {
+        numOfAttempts: maxAttempts, // Include the initial attempt
+        startingDelay: 1000 * config_1.config.baseBackoffTimeInSeconds, // 5 seconds
+        delayFirstAttempt: false,
+        timeMultiple: 2,
+        jitter: 'full',
+        retry: async (error, attemptNumber) => {
+            core.warning(`Attempt ${attemptNumber} failed with error: ${error}`);
+            core.info(`Retrying... (${maxAttempts - attemptNumber} attempt(s) remaining)`);
+            return true; // Retry on all errors
+        }
+    };
+    const runCommitAndPushChanges = async () => await (0, commit_and_push_changes_1.commitAndPushChanges)(g, owner, repo, ref, filesPath, message);
+    try {
+        await (0, exponential_backoff_1.backOff)(runCommitAndPushChanges, options);
+    }
+    catch (error) {
+        core.setFailed(`Failed to commit and push changes after ${maxAttempts} attempts: ${error}`);
+    }
+}
+exports.commitAndPushWithRetry = commitAndPushWithRetry;
+
+
+/***/ }),
+
+/***/ 9955:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createCommit = exports.createFilesTree = exports.getBaseTree = exports.getLatestCommitSha = void 0;
+const promises_1 = __nccwpck_require__(3292);
+async function getLatestCommitSha(g, owner, repo, ref) {
+    const { data: { object: { sha } } } = await g.getRef({ owner, repo, ref });
+    return sha;
+}
+exports.getLatestCommitSha = getLatestCommitSha;
+async function getBaseTree(g, owner, repo, commitSha) {
+    const { data: { tree: { sha } } } = await g.getCommit({ owner, repo, commit_sha: commitSha });
+    return sha;
+}
+exports.getBaseTree = getBaseTree;
+async function createFilesTree(g, owner, repo, filesPath, baseTree) {
+    const encoding = 'utf-8';
+    const filesTree = await Promise.all(filesPath.map(async (path) => {
+        const content = await (0, promises_1.readFile)(path, encoding);
+        const { data } = await g.createBlob({ owner, repo, content, encoding });
+        return { path, mode: '100644', type: 'blob', sha: data.sha };
+    }));
+    const { data: { sha } } = await g.createTree({ owner, repo, base_tree: baseTree, tree: filesTree });
+    return sha;
+}
+exports.createFilesTree = createFilesTree;
+async function createCommit(g, owner, repo, message, treeSha, commitSha) {
+    const { data: { sha } } = await g.createCommit({
+        owner,
+        repo,
+        message,
+        tree: treeSha,
+        parents: [commitSha]
+    });
+    return sha;
+}
+exports.createCommit = createCommit;
 
 
 /***/ }),

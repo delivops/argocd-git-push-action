@@ -10,4 +10,4 @@ export interface Inputs {
   retries: string
 }
 
-export type G = ReturnType<(typeof github)['getOctokit']>['rest']['git']
+export type RestGitClient = ReturnType<(typeof github)['getOctokit']>['rest']['git']

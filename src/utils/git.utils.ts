@@ -1,8 +1,7 @@
 import { readFile } from 'fs/promises'
-import { config } from './config'
-import { G } from './interfaces'
+import { RestGitClient } from '../interfaces'
 
-export async function getLatestCommitSha(g: G, owner: string, repo: string, ref: string): Promise<string> {
+export async function getLatestCommitSha(g: RestGitClient, owner: string, repo: string, ref: string): Promise<string> {
   const {
     data: {
       object: { sha }
@@ -11,7 +10,7 @@ export async function getLatestCommitSha(g: G, owner: string, repo: string, ref:
   return sha
 }
 
-export async function getBaseTree(g: G, owner: string, repo: string, commitSha: string): Promise<string> {
+export async function getBaseTree(g: RestGitClient, owner: string, repo: string, commitSha: string): Promise<string> {
   const {
     data: {
       tree: { sha }
@@ -21,7 +20,7 @@ export async function getBaseTree(g: G, owner: string, repo: string, commitSha: 
 }
 
 export async function createFilesTree(
-  g: G,
+  g: RestGitClient,
   owner: string,
   repo: string,
   filesPath: string[],
@@ -44,11 +43,11 @@ export async function createFilesTree(
 }
 
 export async function createCommit(
-  g: G,
+  g: RestGitClient,
   owner: string,
   repo: string,
   message: string,
-  tree: string,
+  treeSha: string,
   commitSha: string
 ): Promise<string> {
   const {
@@ -57,41 +56,9 @@ export async function createCommit(
     owner,
     repo,
     message,
-    tree,
+    tree: treeSha,
     parents: [commitSha]
   })
 
   return sha
-}
-
-export async function rebaseAndPush(
-  g: G,
-  owner: string,
-  repo: string,
-  ref: string,
-  treeSha: string,
-  latestSha: string,
-  message: string
-): Promise<void> {
-  const {
-    data: { sha: rebasedCommitSha }
-  } = await g.createCommit({
-    owner,
-    repo,
-    message,
-    tree: treeSha,
-    parents: [latestSha]
-  })
-
-  await g.updateRef({
-    owner,
-    repo,
-    ref,
-    sha: rebasedCommitSha,
-    force: true
-  })
-}
-
-export function calculateBackoffTime(attempt: number): number {
-  return config.baseBackoffTime * attempt + Math.floor(Math.random() * config.randomBackoffTime)
 }

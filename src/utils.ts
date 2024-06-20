@@ -1,8 +1,6 @@
 import * as core from '@actions/core'
-import * as github from '@actions/github'
 import fs from 'fs/promises'
 import * as yaml from 'yaml'
-import * as CommitAndPushUtils from './commit-and-push-utils'
 import { config } from './config'
 import { Inputs } from './interfaces'
 
@@ -45,7 +43,7 @@ export async function updateYamlFiles(
         await updateApplicationTagInFile(applicationFilePath, tag)
         foundClustersFolderName = applicationFilePath.split('/')[0] // Save the folder name for the next iteration
       } catch (error) {
-        core.setFailed(`Failed to update yaml file ${applicationFilePath}: ${(error as Error).message}`)
+        core.setFailed(`Failed to update yaml file ${applicationFilePath}: ${error}`)
       }
       filesPath.push(applicationFilePath)
     } else {
@@ -68,7 +66,7 @@ async function findValidFilePath(
       await fs.access(filePath, fs.constants.R_OK | fs.constants.W_OK)
       return filePath
     } catch (error) {
-      core.warning(`File ${filePath} not accessible: ${(error as Error).message}`)
+      core.warning(`File ${filePath} not accessible: ${error}`)
     }
   }
 
@@ -78,7 +76,7 @@ async function findValidFilePath(
       await fs.access(filePath, fs.constants.R_OK | fs.constants.W_OK)
       return filePath
     } catch (error) {
-      core.warning(`File ${filePath} not accessible: ${(error as Error).message}`)
+      core.warning(`File ${filePath} not accessible: ${error}`)
     }
   }
 
@@ -105,54 +103,8 @@ async function updateApplicationTagInFile(filePath: string, tag: string): Promis
       throw new Error(`The path ${imageTagPath} does not exist in ${filePath}`)
     }
   } catch (error) {
-    core.warning(`Failed to update application tag in file ${filePath}: ${(error as Error).message}`)
+    core.warning(`Failed to update application tag in file ${filePath}: ${error}`)
     throw error
-  }
-}
-
-export async function commitAndPushChanges(
-  filesPath: string[],
-  branchName: string,
-  message: string,
-  githubToken: string,
-  retries: string
-): Promise<void> {
-  const { owner, repo } = github.context.repo
-  const octokit = github.getOctokit(githubToken)
-  const g = octokit.rest.git
-  const ref = `heads/${branchName}`
-
-  let attempt = 0
-  const maxAttempts = parseInt(retries, 10)
-
-  while (attempt < maxAttempts) {
-    try {
-      attempt++
-      core.info(`Attempt ${attempt} to commit and push changes.`)
-
-      const commitSha = await CommitAndPushUtils.getLatestCommitSha(g, owner, repo, ref)
-      const baseTree = await CommitAndPushUtils.getBaseTree(g, owner, repo, commitSha)
-      const treeSha = await CommitAndPushUtils.createFilesTree(g, owner, repo, filesPath, baseTree)
-      const commitShaNew = await CommitAndPushUtils.createCommit(g, owner, repo, message, treeSha, commitSha)
-      const latestSha = await CommitAndPushUtils.getLatestCommitSha(g, owner, repo, ref)
-
-      if (latestSha !== commitSha) {
-        await CommitAndPushUtils.rebaseAndPush(g, owner, repo, ref, treeSha, latestSha, message)
-      } else {
-        await g.updateRef({ owner, repo, ref, sha: commitShaNew })
-      }
-
-      core.info(`Successfully committed and pushed changes on attempt ${attempt}.`)
-      return
-    } catch (error) {
-      if (attempt >= maxAttempts) {
-        core.setFailed(`Failed to commit and push changes after ${maxAttempts} attempts: ${(error as Error).message}`)
-      }
-
-      const backoffTime = CommitAndPushUtils.calculateBackoffTime(attempt)
-      core.warning(`Attempt ${attempt} failed. Retrying in ${backoffTime} seconds...`)
-      await new Promise(resolve => setTimeout(resolve, backoffTime * 1000))
-    }
   }
 }
 

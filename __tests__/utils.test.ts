@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import { run } from '../src/main'
 import * as utils from '../src/utils'
+import * as commitAndPushWithRetry from '../src/utils/commit-and-push-with-retry'
 
 // Mock the GitHub Actions core library
 let getInputMock: jest.SpiedFunction<typeof core.getInput>
@@ -35,9 +36,9 @@ describe('action', () => {
       }
     })
 
-    // Mock the updateYamlFiles and commitAndPushChanges functions
+    // Mock the updateYamlFiles and commitAndPushWithRetry functions
     const updateYamlFilesMock = jest.spyOn(utils, 'updateYamlFiles').mockResolvedValue(['file1.yaml', 'file2.yaml'])
-    const commitAndPushChangesMock = jest.spyOn(utils, 'commitAndPushChanges').mockResolvedValue()
+    const commitAndPushWithRetryMock = jest.spyOn(commitAndPushWithRetry, 'commitAndPushWithRetry').mockResolvedValue()
 
     await run()
 
@@ -47,7 +48,7 @@ describe('action', () => {
       'your-application-1,your-application-2',
       'v1.2.3'
     )
-    expect(commitAndPushChangesMock).toHaveBeenCalledWith(
+    expect(commitAndPushWithRetryMock).toHaveBeenCalledWith(
       ['file1.yaml', 'file2.yaml'],
       process.env.GITHUB_HEAD_REF || 'main',
       'in your-cluster-name: Update your-application-1, your-application-2 to v1.2.3',
@@ -104,7 +105,7 @@ describe('action', () => {
     })
 
     const updateYamlFilesMock = jest.spyOn(utils, 'updateYamlFiles').mockResolvedValue(['file1.yaml', 'file2.yaml'])
-    const commitAndPushChangesMock = jest.spyOn(utils, 'commitAndPushChanges').mockResolvedValue()
+    const commitAndPushChangesMock = jest.spyOn(commitAndPushWithRetry, 'commitAndPushWithRetry').mockResolvedValue()
 
     await run()
 
@@ -145,7 +146,7 @@ describe('action', () => {
     })
 
     jest.spyOn(utils, 'updateYamlFiles').mockResolvedValue([])
-    const commitAndPushChangesMock = jest.spyOn(utils, 'commitAndPushChanges').mockResolvedValue()
+    const commitAndPushChangesMock = jest.spyOn(commitAndPushWithRetry, 'commitAndPushWithRetry').mockResolvedValue()
 
     await run()
 
