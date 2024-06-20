@@ -39,8 +39,8 @@ Here are the detailed inputs for the action.
 ## Usage
 
 Retry mechanism uses backoff timeout:
-`config.baseBackoffTime * attempt + Math.floor(Math.random() * config.randomBackoffTime)` This randomness is used to
-avoid multiple actions to retry at the same time.
+`config.baseBackoffTimeInSeconds * attempt + Math.floor(Math.random() * config.randomBackoffTime)` This randomness is
+used to avoid multiple actions to retry at the same time.
 
 ## Contributing
 
