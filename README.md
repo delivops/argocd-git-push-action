@@ -21,7 +21,7 @@ env/
 
 ```
 
-Note: folder `env` can have alternative names: `clusters` or `environments`.
+Note: folder `env` can have alternative names: `clusters` or `environments` (defined in config.clustersFolderNames)
 
 ## Inputs
 
@@ -38,7 +38,9 @@ Here are the detailed inputs for the action.
 
 ## Usage
 
-TODO
+Retry mechanism uses backoff timeout:
+`config.baseBackoffTime * attempt + Math.floor(Math.random() * config.randomBackoffTime)` This randomness is used to
+avoid multiple actions to retry at the same time.
 
 ## Contributing
 
