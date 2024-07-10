@@ -29643,7 +29643,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
+exports.run = run;
 const core = __importStar(__nccwpck_require__(2186));
 const utils_1 = __nccwpck_require__(1314);
 const commit_and_push_with_retry_1 = __nccwpck_require__(920);
@@ -29663,7 +29663,6 @@ async function run() {
         core.setFailed(`Action failed with error: ${error}`);
     }
 }
-exports.run = run;
 
 
 /***/ }),
@@ -29700,7 +29699,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.splitApplications = exports.updateYamlFiles = exports.getInputs = void 0;
+exports.splitApplications = void 0;
+exports.getInputs = getInputs;
+exports.updateYamlFiles = updateYamlFiles;
 const core = __importStar(__nccwpck_require__(2186));
 const promises_1 = __importDefault(__nccwpck_require__(3292));
 const yaml = __importStar(__nccwpck_require__(4083));
@@ -29723,7 +29724,6 @@ function getInputs() {
     }
     return inputs;
 }
-exports.getInputs = getInputs;
 async function updateYamlFiles(clusterName, projectName, applications, tag) {
     const filesPath = [];
     const applicationList = (0, exports.splitApplications)(applications);
@@ -29747,7 +29747,6 @@ async function updateYamlFiles(clusterName, projectName, applications, tag) {
     }
     return filesPath;
 }
-exports.updateYamlFiles = updateYamlFiles;
 async function findValidFilePath(clusterName, projectName, application, knownFolderName) {
     if (knownFolderName) {
         const filePath = `${knownFolderName}/${clusterName}/${projectName}/${application}.yaml`;
@@ -29831,7 +29830,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.commitAndPushChanges = void 0;
+exports.commitAndPushChanges = commitAndPushChanges;
 const core = __importStar(__nccwpck_require__(2186));
 const GitUtils = __importStar(__nccwpck_require__(9955));
 async function commitAndPushChanges(g, owner, repo, ref, filesPath, message) {
@@ -29851,7 +29850,6 @@ async function commitAndPushChanges(g, owner, repo, ref, filesPath, message) {
     await g.updateRef({ owner, repo, ref, sha, force });
     core.info('Successfully committed and pushed changes.');
 }
-exports.commitAndPushChanges = commitAndPushChanges;
 
 
 /***/ }),
@@ -29885,7 +29883,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.commitAndPushWithRetry = void 0;
+exports.commitAndPushWithRetry = commitAndPushWithRetry;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const exponential_backoff_1 = __nccwpck_require__(3183);
@@ -29917,7 +29915,6 @@ async function commitAndPushWithRetry(filesPath, branchName, message, githubToke
         core.setFailed(`Failed to commit and push changes after ${maxAttempts} attempts: ${error}`);
     }
 }
-exports.commitAndPushWithRetry = commitAndPushWithRetry;
 
 
 /***/ }),
@@ -29928,18 +29925,19 @@ exports.commitAndPushWithRetry = commitAndPushWithRetry;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createCommit = exports.createFilesTree = exports.getBaseTree = exports.getLatestCommitSha = void 0;
+exports.getLatestCommitSha = getLatestCommitSha;
+exports.getBaseTree = getBaseTree;
+exports.createFilesTree = createFilesTree;
+exports.createCommit = createCommit;
 const promises_1 = __nccwpck_require__(3292);
 async function getLatestCommitSha(g, owner, repo, ref) {
     const { data: { object: { sha } } } = await g.getRef({ owner, repo, ref });
     return sha;
 }
-exports.getLatestCommitSha = getLatestCommitSha;
 async function getBaseTree(g, owner, repo, commitSha) {
     const { data: { tree: { sha } } } = await g.getCommit({ owner, repo, commit_sha: commitSha });
     return sha;
 }
-exports.getBaseTree = getBaseTree;
 async function createFilesTree(g, owner, repo, filesPath, baseTree) {
     const encoding = 'utf-8';
     const filesTree = await Promise.all(filesPath.map(async (path) => {
@@ -29950,7 +29948,6 @@ async function createFilesTree(g, owner, repo, filesPath, baseTree) {
     const { data: { sha } } = await g.createTree({ owner, repo, base_tree: baseTree, tree: filesTree });
     return sha;
 }
-exports.createFilesTree = createFilesTree;
 async function createCommit(g, owner, repo, message, treeSha, commitSha) {
     const { data: { sha } } = await g.createCommit({
         owner,
@@ -29961,7 +29958,6 @@ async function createCommit(g, owner, repo, message, treeSha, commitSha) {
     });
     return sha;
 }
-exports.createCommit = createCommit;
 
 
 /***/ }),
