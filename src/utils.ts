@@ -60,29 +60,20 @@ async function findValidFilePath(
   application: string,
   knownFolderName: string | null
 ): Promise<string | null> {
-  if (knownFolderName) {
-    const filePath = `${knownFolderName}/${clusterName}/${projectName}/${application}.yaml`
-    try {
-      await fs.access(filePath, fs.constants.R_OK | fs.constants.W_OK)
-      return filePath
-    } catch (error) {
-      core.warning(`File ${filePath} not accessible: ${error}`)
-    }
-  }
+  const folderNames = knownFolderName ? [knownFolderName, ...config.CLUSTER_FOLDER_NAMES] : config.CLUSTER_FOLDER_NAMES
 
-  for (const folderName of config.clustersFolderNames) {
+  for (const folderName of folderNames) {
     const filePath = `${folderName}/${clusterName}/${projectName}/${application}.yaml`
     try {
-      await fs.access(filePath, fs.constants.R_OK | fs.constants.W_OK)
+      await fs.access(filePath, fs.constants.F_OK)
       return filePath
     } catch (error) {
-      core.warning(`File ${filePath} not accessible: ${error}`)
+      core.warning(`File ${filePath} not accessible: ${error}. Trying a different cluster folder.`)
     }
   }
 
   return null
 }
-
 async function updateApplicationTagInFile(filePath: string, tag: string): Promise<void> {
   const encoding = 'utf-8'
 

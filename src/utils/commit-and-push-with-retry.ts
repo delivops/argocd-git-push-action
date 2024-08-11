@@ -19,7 +19,7 @@ export async function commitAndPushWithRetry(
 
   const options: BackoffOptions = {
     numOfAttempts: maxAttempts, // Include the initial attempt
-    startingDelay: 1000 * config.baseBackoffTimeInSeconds, // 5 seconds
+    startingDelay: 1000 * config.BASE_BACKOFF_TIME_IN_SEC, // 5 seconds
     delayFirstAttempt: false,
     timeMultiple: 2,
     jitter: 'full',

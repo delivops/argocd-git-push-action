@@ -29607,8 +29607,8 @@ function wrappy (fn, cb) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.config = void 0;
 exports.config = {
-    baseBackoffTimeInSeconds: 5,
-    clustersFolderNames: ['env', 'clusters', 'environments']
+    BASE_BACKOFF_TIME_IN_SEC: 5,
+    CLUSTER_FOLDER_NAMES: ['env', 'clusters', 'environments']
 };
 
 
@@ -29748,24 +29748,15 @@ async function updateYamlFiles(clusterName, projectName, applications, tag) {
     return filesPath;
 }
 async function findValidFilePath(clusterName, projectName, application, knownFolderName) {
-    if (knownFolderName) {
-        const filePath = `${knownFolderName}/${clusterName}/${projectName}/${application}.yaml`;
-        try {
-            await promises_1.default.access(filePath, promises_1.default.constants.R_OK | promises_1.default.constants.W_OK);
-            return filePath;
-        }
-        catch (error) {
-            core.warning(`File ${filePath} not accessible: ${error}`);
-        }
-    }
-    for (const folderName of config_1.config.clustersFolderNames) {
+    const folderNames = knownFolderName ? [knownFolderName, ...config_1.config.CLUSTER_FOLDER_NAMES] : config_1.config.CLUSTER_FOLDER_NAMES;
+    for (const folderName of folderNames) {
         const filePath = `${folderName}/${clusterName}/${projectName}/${application}.yaml`;
         try {
-            await promises_1.default.access(filePath, promises_1.default.constants.R_OK | promises_1.default.constants.W_OK);
+            await promises_1.default.access(filePath, promises_1.default.constants.F_OK);
             return filePath;
         }
         catch (error) {
-            core.warning(`File ${filePath} not accessible: ${error}`);
+            core.warning(`File ${filePath} not accessible: ${error}. Trying a different cluster folder.`);
         }
     }
     return null;
@@ -29897,7 +29888,7 @@ async function commitAndPushWithRetry(filesPath, branchName, message, githubToke
     const maxAttempts = parseInt(retries, 10) + 1; // Include the initial attempt
     const options = {
         numOfAttempts: maxAttempts, // Include the initial attempt
-        startingDelay: 1000 * config_1.config.baseBackoffTimeInSeconds, // 5 seconds
+        startingDelay: 1000 * config_1.config.BASE_BACKOFF_TIME_IN_SEC, // 5 seconds
         delayFirstAttempt: false,
         timeMultiple: 2,
         jitter: 'full',
