@@ -94,15 +94,16 @@ async function updateApplicationTagInFile(filePath: string, tag: string): Promis
     const imageTagPath = 'spec.source.helm.valuesObject.image.tag'
     const imageTagNode = data.getIn(imageTagPath.split('.'))
 
-    try {
-      data.setIn(imageTagPath.split('.'), tag)
-      const newYaml = data.toString()
-      core.info(`New YAML content for ${filePath}: \n${newYaml}`)
-      await fs.writeFile(filePath, newYaml, encoding)
-    } catch (error) {
-      core.warning(`Failed to update application tag in file ${filePath}: ${error}`)
-      throw error
+    if (imageTagNode === undefined || typeof imageTagNode !== 'string') {
+      const message = `The path ${imageTagPath} does not exist or is not a string in file ${filePath}`
+      core.warning(message)
+      throw new Error(message)
     }
+
+    data.setIn(imageTagPath.split('.'), tag)
+    const newYaml = data.toString()
+    core.info(`New YAML content for ${filePath}: \n${newYaml}`)
+    await fs.writeFile(filePath, newYaml, encoding)
   } catch (error) {
     core.warning(`Failed to update application tag in file ${filePath}: ${error}`)
     throw error
