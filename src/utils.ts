@@ -94,7 +94,7 @@ async function updateApplicationTagInFile(filePath: string, tag: string): Promis
     const imageTagPath = 'spec.source.helm.valuesObject.image.tag'
     const imageTagNode = data.getIn(imageTagPath.split('.'))
 
-    if (imageTagNode) {
+    if (imageTagNode !== undefined && typeof imageTagNode === 'string') {
       data.setIn(imageTagPath.split('.'), tag)
       const newYaml = data.toString()
       core.info(`New YAML content for ${filePath}: \n${newYaml}`)
