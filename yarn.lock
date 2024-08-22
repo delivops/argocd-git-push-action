@@ -1183,7 +1183,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:^7.0.1, @typescript-eslint/eslint-plugin@npm:^7.18.0":
+"@typescript-eslint/eslint-plugin@npm:^7.0.1":
   version: 7.18.0
   resolution: "@typescript-eslint/eslint-plugin@npm:7.18.0"
   dependencies:
@@ -1206,6 +1206,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@typescript-eslint/eslint-plugin@npm:^8.0.0":
+  version: 8.2.0
+  resolution: "@typescript-eslint/eslint-plugin@npm:8.2.0"
+  dependencies:
+    "@eslint-community/regexpp": "npm:^4.10.0"
+    "@typescript-eslint/scope-manager": "npm:8.2.0"
+    "@typescript-eslint/type-utils": "npm:8.2.0"
+    "@typescript-eslint/utils": "npm:8.2.0"
+    "@typescript-eslint/visitor-keys": "npm:8.2.0"
+    graphemer: "npm:^1.4.0"
+    ignore: "npm:^5.3.1"
+    natural-compare: "npm:^1.4.0"
+    ts-api-utils: "npm:^1.3.0"
+  peerDependencies:
+    "@typescript-eslint/parser": ^8.0.0 || ^8.0.0-alpha.0
+    eslint: ^8.57.0 || ^9.0.0
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/17243ee1b34d78723fe3e1a308c64490eee49bd83301e3abe8a6f05bce05434d70f56caf75756b8cffa051154dc89cdf485114ede6781fc087f0aaca37a026ec
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/parser@npm:^6.7.5":
   version: 6.21.0
   resolution: "@typescript-eslint/parser@npm:6.21.0"
@@ -1224,7 +1247,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^7.0.1, @typescript-eslint/parser@npm:^7.18.0":
+"@typescript-eslint/parser@npm:^7.0.1":
   version: 7.18.0
   resolution: "@typescript-eslint/parser@npm:7.18.0"
   dependencies:
@@ -1239,6 +1262,24 @@ __metadata:
     typescript:
       optional: true
   checksum: 10c0/370e73fca4278091bc1b657f85e7d74cd52b24257ea20c927a8e17546107ce04fbf313fec99aed0cc2a145ddbae1d3b12e9cc2c1320117636dc1281bcfd08059
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/parser@npm:^8.0.0":
+  version: 8.2.0
+  resolution: "@typescript-eslint/parser@npm:8.2.0"
+  dependencies:
+    "@typescript-eslint/scope-manager": "npm:8.2.0"
+    "@typescript-eslint/types": "npm:8.2.0"
+    "@typescript-eslint/typescript-estree": "npm:8.2.0"
+    "@typescript-eslint/visitor-keys": "npm:8.2.0"
+    debug: "npm:^4.3.4"
+  peerDependencies:
+    eslint: ^8.57.0 || ^9.0.0
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/bb4ebc0a40b5e68c5287de17af3acf3045e2ef7886ebee8d1c4a6fd07bd6d55e9fc12bc7b89d07d15a2a4182cbf6380b50ad148d4a37e93d2e54930aa386a3bf
   languageName: node
   linkType: hard
 
@@ -1286,6 +1327,21 @@ __metadata:
     typescript:
       optional: true
   checksum: 10c0/ad92a38007be620f3f7036f10e234abdc2fdc518787b5a7227e55fd12896dacf56e8b34578723fbf9bea8128df2510ba8eb6739439a3879eda9519476d5783fd
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/type-utils@npm:8.2.0":
+  version: 8.2.0
+  resolution: "@typescript-eslint/type-utils@npm:8.2.0"
+  dependencies:
+    "@typescript-eslint/typescript-estree": "npm:8.2.0"
+    "@typescript-eslint/utils": "npm:8.2.0"
+    debug: "npm:^4.3.4"
+    ts-api-utils: "npm:^1.3.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/5ff387d39fec3ba47af167ca3e48a200f87e4b97b010170245f495cd3d2e30fd0a5b2a9b27aae2ae929c99f92acabcd07315944dc6f9de963bad1c61ba9ea53c
   languageName: node
   linkType: hard
 
@@ -1381,7 +1437,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/utils@npm:^6.0.0 || ^7.0.0 || ^8.0.0":
+"@typescript-eslint/utils@npm:8.2.0, @typescript-eslint/utils@npm:^6.0.0 || ^7.0.0 || ^8.0.0":
   version: 8.2.0
   resolution: "@typescript-eslint/utils@npm:8.2.0"
   dependencies:
@@ -1587,8 +1643,8 @@ __metadata:
     "@jest/globals": "npm:^29.7.0"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^22.5.0"
-    "@typescript-eslint/eslint-plugin": "npm:^7.18.0"
-    "@typescript-eslint/parser": "npm:^7.18.0"
+    "@typescript-eslint/eslint-plugin": "npm:^8.0.0"
+    "@typescript-eslint/parser": "npm:^8.0.0"
     "@vercel/ncc": "npm:^0.38.1"
     coverage-badges-cli: "npm:^2.0.0"
     eslint: "npm:^8.57.0"
