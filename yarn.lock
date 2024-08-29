@@ -1151,12 +1151,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.5.0":
+"@types/node@npm:*":
   version: 22.5.0
   resolution: "@types/node@npm:22.5.0"
   dependencies:
     undici-types: "npm:~6.19.2"
   checksum: 10c0/45aa75c5e71645fac42dced4eff7f197c3fdfff6e8a9fdacd0eb2e748ff21ee70ffb73982f068a58e8d73b2c088a63613142c125236cdcf3c072ea97eada1559
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^22.5.1":
+  version: 22.5.1
+  resolution: "@types/node@npm:22.5.1"
+  dependencies:
+    undici-types: "npm:~6.19.2"
+  checksum: 10c0/35373176d8a1d4e16004a1ed303e68d39e4c6341024dc056f2577982df98c1a045a6b677f12ed557796f09bbf7d621f428f6874cc37ed28f7b336fa604b5f6a6
   languageName: node
   linkType: hard
 
@@ -1586,7 +1595,7 @@ __metadata:
     "@actions/github": "npm:^6.0.0"
     "@jest/globals": "npm:^29.7.0"
     "@types/jest": "npm:^29.5.12"
-    "@types/node": "npm:^22.5.0"
+    "@types/node": "npm:^22.5.1"
     "@typescript-eslint/eslint-plugin": "npm:^7.18.0"
     "@typescript-eslint/parser": "npm:^7.18.0"
     "@vercel/ncc": "npm:^0.38.1"
@@ -1594,14 +1603,14 @@ __metadata:
     eslint: "npm:^8.57.0"
     eslint-plugin-github: "npm:^5.0.1"
     eslint-plugin-import: "npm:^2.29.1"
-    eslint-plugin-jest: "npm:^28.8.0"
+    eslint-plugin-jest: "npm:^28.8.1"
     eslint-plugin-jsonc: "npm:^2.16.0"
     eslint-plugin-prettier: "npm:^5.2.1"
     exponential-backoff: "npm:^3.1.1"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.3.3"
     prettier-eslint: "npm:^16.3.0"
-    ts-jest: "npm:^29.2.4"
+    ts-jest: "npm:^29.2.5"
     typescript: "npm:^5.5.4"
     yaml: "npm:^2.5.0"
   languageName: unknown
@@ -1907,7 +1916,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bs-logger@npm:0.x":
+"bs-logger@npm:^0.2.6":
   version: 0.2.6
   resolution: "bs-logger@npm:0.2.6"
   dependencies:
@@ -2785,9 +2794,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-jest@npm:^28.8.0":
-  version: 28.8.0
-  resolution: "eslint-plugin-jest@npm:28.8.0"
+"eslint-plugin-jest@npm:^28.8.1":
+  version: 28.8.1
+  resolution: "eslint-plugin-jest@npm:28.8.1"
   dependencies:
     "@typescript-eslint/utils": "npm:^6.0.0 || ^7.0.0 || ^8.0.0"
   peerDependencies:
@@ -2799,7 +2808,7 @@ __metadata:
       optional: true
     jest:
       optional: true
-  checksum: 10c0/cb702701c20224d813b7d7515ed3fe4562b92cd4233db356b0948e0765a382a9887ae7dfd13191c2cabecbb4a6cbbd141f309618830b251c8f86a7f950e7f50b
+  checksum: 10c0/340f5021e7eadfc6f3c1ad9378fafb9b1ead10f07636ba2e9d5ec0abd2f2604b4bc301cbb9658f84534962244958ac6a037bf8a6bd64e341542e3c5dccc2bc95
   languageName: node
   linkType: hard
 
@@ -4689,7 +4698,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash.memoize@npm:4.x":
+"lodash.memoize@npm:^4.1.2":
   version: 4.1.2
   resolution: "lodash.memoize@npm:4.1.2"
   checksum: 10c0/c8713e51eccc650422716a14cece1809cfe34bc5ab5e242b7f8b4e2241c2483697b971a604252807689b9dd69bfe3a98852e19a5b89d506b000b4187a1285df8
@@ -4766,7 +4775,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"make-error@npm:1.x":
+"make-error@npm:^1.3.6":
   version: 1.3.6
   resolution: "make-error@npm:1.3.6"
   checksum: 10c0/171e458d86854c6b3fc46610cfacf0b45149ba043782558c6875d9f42f222124384ad0b468c92e996d815a8a2003817a710c0a160e49c1c394626f76fa45396f
@@ -5620,7 +5629,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.5, semver@npm:^7.3.6, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0":
+"semver@npm:^7.3.5, semver@npm:^7.3.6, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.3":
   version: 7.6.3
   resolution: "semver@npm:7.6.3"
   bin:
@@ -6059,19 +6068,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-jest@npm:^29.2.4":
-  version: 29.2.4
-  resolution: "ts-jest@npm:29.2.4"
+"ts-jest@npm:^29.2.5":
+  version: 29.2.5
+  resolution: "ts-jest@npm:29.2.5"
   dependencies:
-    bs-logger: "npm:0.x"
+    bs-logger: "npm:^0.2.6"
     ejs: "npm:^3.1.10"
-    fast-json-stable-stringify: "npm:2.x"
+    fast-json-stable-stringify: "npm:^2.1.0"
     jest-util: "npm:^29.0.0"
     json5: "npm:^2.2.3"
-    lodash.memoize: "npm:4.x"
-    make-error: "npm:1.x"
-    semver: "npm:^7.5.3"
-    yargs-parser: "npm:^21.0.1"
+    lodash.memoize: "npm:^4.1.2"
+    make-error: "npm:^1.3.6"
+    semver: "npm:^7.6.3"
+    yargs-parser: "npm:^21.1.1"
   peerDependencies:
     "@babel/core": ">=7.0.0-beta.0 <8"
     "@jest/transform": ^29.0.0
@@ -6092,7 +6101,7 @@ __metadata:
       optional: true
   bin:
     ts-jest: cli.js
-  checksum: 10c0/43be1d5625d44bc48815d91810e796d74682757b4f64677b54aae1f4da855476e50c01b92d54add4b02976ecf2cbb2f318d7c7788844328de44f145b95185fac
+  checksum: 10c0/acb62d168faec073e64b20873b583974ba8acecdb94681164eb346cef82ade8fb481c5b979363e01a97ce4dd1e793baf64d9efd90720bc941ad7fc1c3d6f3f68
   languageName: node
   linkType: hard
 
@@ -6509,7 +6518,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yargs-parser@npm:^21.0.1, yargs-parser@npm:^21.1.1":
+"yargs-parser@npm:^21.1.1":
   version: 21.1.1
   resolution: "yargs-parser@npm:21.1.1"
   checksum: 10c0/f84b5e48169479d2f402239c59f084cfd1c3acc197a05c59b98bab067452e6b3ea46d4dd8ba2985ba7b3d32a343d77df0debd6b343e5dae3da2aab2cdf5886b2
