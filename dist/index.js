@@ -29659,7 +29659,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(2186));
 const utils_1 = __nccwpck_require__(1314);
-const commit_and_push_with_retry_1 = __nccwpck_require__(920);
+const commit_and_push_changes_1 = __nccwpck_require__(4826);
 async function run() {
     try {
         const { clusterName, projectName, applications, tag, branchName, githubToken, retries } = (0, utils_1.getInputs)();
@@ -29670,7 +29670,7 @@ async function run() {
         }
         const message = `in ${clusterName}: Update ${(0, utils_1.splitApplications)(applications).join(', ')} to ${tag}`;
         core.info(`Committing and pushing changes with message: "${message}"`);
-        await (0, commit_and_push_with_retry_1.commitAndPushWithRetry)(filesPath, branchName, message, githubToken, retries);
+        await (0, commit_and_push_changes_1.commitAndPushWithRetries)(filesPath, branchName, message, githubToken, retries);
     }
     catch (error) {
         core.setFailed(`Action failed with error: ${error}`);
@@ -29714,7 +29714,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.splitApplications = void 0;
 exports.getInputs = getInputs;
+exports.validateInputs = validateInputs;
 exports.updateYamlFiles = updateYamlFiles;
+exports.findValidFilePath = findValidFilePath;
+exports.updateApplicationTagInFile = updateApplicationTagInFile;
 const core = __importStar(__nccwpck_require__(2186));
 const promises_1 = __importDefault(__nccwpck_require__(3292));
 const yaml = __importStar(__nccwpck_require__(4083));
@@ -29729,13 +29732,16 @@ function getInputs() {
         branchName: process.env.GITHUB_HEAD_REF || 'main',
         retries: core.getInput('retries') ?? '1'
     };
+    validateInputs(inputs);
+    return inputs;
+}
+function validateInputs(inputs) {
     if (!inputs.clusterName || !inputs.applications || !inputs.projectName || !inputs.githubToken || !inputs.tag) {
-        core.setFailed('Action failed with error: Missing required inputs.');
+        throw new Error('Missing required inputs.');
     }
     if (!parseInt(inputs.retries, 10)) {
-        core.setFailed('Action failed with error: Invalid retries value.');
+        throw new Error('Invalid retries value.');
     }
-    return inputs;
 }
 async function updateYamlFiles(clusterName, projectName, applications, tag) {
     const filesPath = [];
@@ -29747,15 +29753,15 @@ async function updateYamlFiles(clusterName, projectName, applications, tag) {
         if (applicationFilePath) {
             try {
                 await updateApplicationTagInFile(applicationFilePath, tag);
-                foundClustersFolderName = applicationFilePath.split('/')[0]; // Save the folder name for the next iteration
+                foundClustersFolderName = applicationFilePath.split('/')[0];
+                filesPath.push(applicationFilePath);
             }
             catch (error) {
-                core.setFailed(`Failed to update yaml file ${applicationFilePath}: ${error}`);
+                core.warning(`Failed to update yaml file ${applicationFilePath}: ${error}`);
             }
-            filesPath.push(applicationFilePath);
         }
         else {
-            core.setFailed(`No valid folder found for application ${application}`);
+            core.warning(`No valid folder found for application ${application}`);
         }
     }
     return filesPath;
@@ -29769,7 +29775,7 @@ async function findValidFilePath(clusterName, projectName, application, knownFol
             return filePath;
         }
         catch (error) {
-            core.warning(`File ${filePath} not accessible: ${error}. Trying a different cluster folder.`);
+            core.debug(`File ${filePath} not accessible: ${error}. Trying a different cluster folder.`);
         }
     }
     return null;
@@ -29777,25 +29783,17 @@ async function findValidFilePath(clusterName, projectName, application, knownFol
 async function updateApplicationTagInFile(filePath, tag) {
     const encoding = 'utf-8';
     core.info(`Updating application tag in file ${filePath} to ${tag}.`);
-    try {
-        const fileContents = await promises_1.default.readFile(filePath, encoding);
-        const data = yaml.parseDocument(fileContents);
-        const imageTagPath = 'spec.source.helm.valuesObject.image.tag';
-        const imageTagNode = data.getIn(imageTagPath.split('.'));
-        if (imageTagNode === undefined || typeof imageTagNode !== 'string') {
-            const message = `The path ${imageTagPath} does not exist or is not a string in file ${filePath}`;
-            core.warning(message);
-            throw new Error(message);
-        }
-        data.setIn(imageTagPath.split('.'), tag);
-        const newYaml = data.toString();
-        core.info(`New YAML content for ${filePath}: \n${newYaml}`);
-        await promises_1.default.writeFile(filePath, newYaml, encoding);
+    const fileContents = await promises_1.default.readFile(filePath, encoding);
+    const data = yaml.parseDocument(fileContents);
+    const imageTagPath = 'spec.source.helm.valuesObject.image.tag';
+    const imageTagNode = data.getIn(imageTagPath.split('.'));
+    if (imageTagNode === undefined || typeof imageTagNode !== 'string') {
+        throw new Error(`The path ${imageTagPath} does not exist or is not a string in file ${filePath}`);
     }
-    catch (error) {
-        core.warning(`Failed to update application tag in file ${filePath}: ${error}`);
-        throw error;
-    }
+    data.setIn(imageTagPath.split('.'), tag);
+    const newYaml = data.toString();
+    core.debug(`New YAML content for ${filePath}: \n${newYaml}`);
+    await promises_1.default.writeFile(filePath, newYaml, encoding);
 }
 const splitApplications = (applications) => {
     return applications.split(/[;,]/).map(app => app.trim());
@@ -29834,31 +29832,42 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.commitAndPushWithRetries = commitAndPushWithRetries;
 exports.commitAndPushChanges = commitAndPushChanges;
 const core = __importStar(__nccwpck_require__(2186));
 const GitUtils = __importStar(__nccwpck_require__(9955));
+const get_github_context_1 = __nccwpck_require__(4982);
+const retry_operation_1 = __nccwpck_require__(3847);
+async function commitAndPushWithRetries(filesPath, branchName, message, githubToken, retries) {
+    const { g, owner, repo } = (0, get_github_context_1.getGithubContext)(githubToken);
+    const ref = `heads/${branchName}`;
+    const maxAttempts = parseInt(retries, 10) + 1;
+    await (0, retry_operation_1.retryOperation)(async () => await commitAndPushChanges(g, owner, repo, ref, filesPath, message), { maxAttempts }, 'Failed to commit and push changes');
+}
 async function commitAndPushChanges(g, owner, repo, ref, filesPath, message) {
     const commitSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref);
     const baseTree = await GitUtils.getBaseTree(g, owner, repo, commitSha);
     const treeSha = await GitUtils.createFilesTree(g, owner, repo, filesPath, baseTree);
-    const commitShaNew = await GitUtils.createCommit(g, owner, repo, message, treeSha, commitSha);
-    const latestSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref);
-    let sha = commitShaNew;
-    let force = false;
-    if (latestSha !== commitSha) {
-        console.warn('The branch has been updated since we last fetched the latest commit sha.');
-        // Rebasing the changes on top of the latest commit
-        sha = await GitUtils.createCommit(g, owner, repo, message, treeSha, latestSha);
-        force = true;
-    }
-    await g.updateRef({ owner, repo, ref, sha, force });
+    const newCommitSha = await GitUtils.createCommit(g, owner, repo, message, treeSha, commitSha);
+    await updateRefWithRetry(g, owner, repo, ref, newCommitSha, commitSha);
     core.info('Successfully committed and pushed changes.');
+}
+async function updateRefWithRetry(g, owner, repo, ref, newCommitSha, originalCommitSha) {
+    const latestSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref);
+    if (latestSha !== originalCommitSha) {
+        core.warning('The branch has been updated since we last fetched the latest commit sha.');
+        const updatedCommitSha = await GitUtils.createCommit(g, owner, repo, 'Rebased commit', newCommitSha, latestSha);
+        await g.updateRef({ owner, repo, ref, sha: updatedCommitSha, force: true });
+    }
+    else {
+        await g.updateRef({ owner, repo, ref, sha: newCommitSha });
+    }
 }
 
 
 /***/ }),
 
-/***/ 920:
+/***/ 4982:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -29887,38 +29896,22 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.commitAndPushWithRetry = commitAndPushWithRetry;
-const core = __importStar(__nccwpck_require__(2186));
+exports.getGithubContext = exports.getRepoContext = exports.getOctokit = void 0;
 const github = __importStar(__nccwpck_require__(5438));
-const exponential_backoff_1 = __nccwpck_require__(3183);
-const config_1 = __nccwpck_require__(6373);
-const commit_and_push_changes_1 = __nccwpck_require__(4826);
-async function commitAndPushWithRetry(filesPath, branchName, message, githubToken, retries) {
+const getOctokit = (githubToken) => github.getOctokit(githubToken);
+exports.getOctokit = getOctokit;
+const getRepoContext = () => {
     const { owner, repo } = github.context.repo;
-    const octokit = github.getOctokit(githubToken);
+    return { owner, repo };
+};
+exports.getRepoContext = getRepoContext;
+const getGithubContext = (githubToken) => {
+    const { owner, repo } = (0, exports.getRepoContext)();
+    const octokit = (0, exports.getOctokit)(githubToken);
     const g = octokit.rest.git;
-    const ref = `heads/${branchName}`;
-    const maxAttempts = parseInt(retries, 10) + 1; // Include the initial attempt
-    const options = {
-        numOfAttempts: maxAttempts, // Include the initial attempt
-        startingDelay: 1000 * config_1.config.BASE_BACKOFF_TIME_IN_SEC, // 5 seconds
-        delayFirstAttempt: false,
-        timeMultiple: 2,
-        jitter: 'full',
-        retry: async (error, attemptNumber) => {
-            core.warning(`Attempt ${attemptNumber} failed with error: ${error}`);
-            core.info(`Retrying... (${maxAttempts - attemptNumber} attempt(s) remaining)`);
-            return true; // Retry on all errors
-        }
-    };
-    const runCommitAndPushChanges = async () => await (0, commit_and_push_changes_1.commitAndPushChanges)(g, owner, repo, ref, filesPath, message);
-    try {
-        await (0, exponential_backoff_1.backOff)(runCommitAndPushChanges, options);
-    }
-    catch (error) {
-        core.setFailed(`Failed to commit and push changes after ${maxAttempts} attempts: ${error}`);
-    }
-}
+    return { owner, repo, octokit, g };
+};
+exports.getGithubContext = getGithubContext;
 
 
 /***/ }),
@@ -29962,6 +29955,68 @@ async function createCommit(g, owner, repo, message, treeSha, commitSha) {
     });
     return sha;
 }
+
+
+/***/ }),
+
+/***/ 3847:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.retryOperation = exports.createBackoffOptions = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const exponential_backoff_1 = __nccwpck_require__(3183);
+const config_1 = __nccwpck_require__(6373);
+const createBackoffOptions = (options) => {
+    return {
+        numOfAttempts: options.maxAttempts,
+        startingDelay: options.startingDelay || 1000 * config_1.config.BASE_BACKOFF_TIME_IN_SEC,
+        delayFirstAttempt: false,
+        timeMultiple: options.timeMultiple || 2,
+        jitter: 'full',
+        retry: async (error, attemptNumber) => {
+            core.warning(`Attempt ${attemptNumber} failed with error: ${error}`);
+            core.info(`Retrying... (${options.maxAttempts - attemptNumber} attempt(s) remaining)`);
+            return true;
+        }
+    };
+};
+exports.createBackoffOptions = createBackoffOptions;
+const retryOperation = async (operation, options, errorMessage) => {
+    try {
+        return await (0, exponential_backoff_1.backOff)(operation, (0, exports.createBackoffOptions)(options));
+    }
+    catch (error) {
+        core.setFailed(`${errorMessage} after ${options.maxAttempts} attempts: ${error}`);
+        throw error;
+    }
+};
+exports.retryOperation = retryOperation;
 
 
 /***/ }),

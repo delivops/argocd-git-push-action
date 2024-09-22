@@ -58,19 +58,20 @@ describe('commitAndPushWithRetries', () => {
   })
 
   it('should fail after maximum attempts', async () => {
-    const mockError = new Error('Commit and push failed');
-    jest.spyOn(GitUtils, 'getLatestCommitSha').mockRejectedValue(mockError);
-  
+    const mockError = new Error('Commit and push failed')
+    jest.spyOn(GitUtils, 'getLatestCommitSha').mockRejectedValue(mockError)
+
     const mockBackOff = jest.spyOn(backoff, 'backOff').mockImplementation(() => {
-      throw new Error('Maximum attempts reached');
-    });
-  
-    await expect(commitAndPushWithRetries(filesPath, branchName, message, githubToken, retries))
-      .rejects.toThrow('Maximum attempts reached');
-  
-    expect(mockBackOff).toHaveBeenCalledTimes(1);
+      throw new Error('Maximum attempts reached')
+    })
+
+    await expect(commitAndPushWithRetries(filesPath, branchName, message, githubToken, retries)).rejects.toThrow(
+      'Maximum attempts reached'
+    )
+
+    expect(mockBackOff).toHaveBeenCalledTimes(1)
     expect(core.setFailed).toHaveBeenCalledWith(
       expect.stringContaining('Failed to commit and push changes after 4 attempts')
-    );
-  });
+    )
+  })
 })

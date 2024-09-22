@@ -91,7 +91,7 @@ describe('getInputs', () => {
   })
 
   it('should throw an error when required inputs are missing', () => {
-    ;(core.getInput as jest.Mock).mockImplementation((name: string) => '')
+    ;(core.getInput as jest.Mock).mockImplementation((_name: string) => '')
 
     expect(() => utils.getInputs()).toThrow('Missing required inputs.')
   })
@@ -133,7 +133,7 @@ describe('findValidFilePath', () => {
     const projectName = 'test-project'
     const application = 'app1'
     const knownFolderName = null
-    ;(fs.access as jest.Mock).mockImplementation((path, mode) => Promise.resolve())
+    ;(fs.access as jest.Mock).mockResolvedValue(undefined)
 
     const result = await utils.findValidFilePath(clusterName, projectName, application, knownFolderName)
 
@@ -145,7 +145,7 @@ describe('findValidFilePath', () => {
     const projectName = 'test-project'
     const application = 'app1'
     const knownFolderName = null
-    ;(fs.access as jest.Mock).mockImplementation((path, mode) => Promise.reject(new Error('File not found')))
+    ;(fs.access as jest.Mock).mockRejectedValue(new Error('File not found'))
 
     const result = await utils.findValidFilePath(clusterName, projectName, application, knownFolderName)
 

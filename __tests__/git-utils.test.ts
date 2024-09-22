@@ -1,3 +1,4 @@
+import { RestGitClient } from '../src/interface/interfaces'
 import * as GitUtils from '../src/utils/git.utils'
 
 describe('git.utils', () => {
@@ -14,7 +15,7 @@ describe('git.utils', () => {
       const repo = 'test-repo'
       const ref = 'heads/main'
 
-      const result = await GitUtils.getLatestCommitSha(mockG as any, owner, repo, ref)
+      const result = await GitUtils.getLatestCommitSha(mockG as unknown as RestGitClient, owner, repo, ref)
 
       expect(mockG.getRef).toHaveBeenCalledWith({ owner, repo, ref })
       expect(result).toBe('latest-sha')
@@ -35,7 +36,7 @@ describe('getBaseTree', () => {
     const repo = 'test-repo'
     const commitSha = 'commit-sha'
 
-    const result = await GitUtils.getBaseTree(mockG as any, owner, repo, commitSha)
+    const result = await GitUtils.getBaseTree(mockG as unknown as RestGitClient, owner, repo, commitSha)
 
     expect(mockG.getCommit).toHaveBeenCalledWith({ owner, repo, commit_sha: commitSha })
     expect(result).toBe('base-tree-sha')
@@ -49,6 +50,8 @@ describe('getBaseTree', () => {
     const repo = 'test-repo'
     const commitSha = 'commit-sha'
 
-    await expect(GitUtils.getBaseTree(mockG as any, owner, repo, commitSha)).rejects.toThrow('getCommit error')
+    await expect(GitUtils.getBaseTree(mockG as unknown as RestGitClient, owner, repo, commitSha)).rejects.toThrow(
+      'getCommit error'
+    )
   })
 })
