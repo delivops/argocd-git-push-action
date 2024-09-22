@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import fs from 'fs/promises'
 import * as yaml from 'yaml'
 import { config } from './config'
-import { Inputs } from './interfaces'
+import { Inputs } from './interface/interfaces'
 
 export function getInputs(): Inputs {
   const inputs = {
@@ -12,7 +12,8 @@ export function getInputs(): Inputs {
     githubToken: core.getInput('github-token', { required: true }),
     tag: core.getInput('tag', { required: true }),
     branchName: process.env.GITHUB_HEAD_REF || 'main',
-    retries: core.getInput('retries') ?? '1'
+    retries: core.getInput('retries') ?? '1',
+    createPr: core.getInput('create_pr') === 'true'
   } as const
 
   if (!inputs.clusterName || !inputs.applications || !inputs.projectName || !inputs.githubToken || !inputs.tag) {
@@ -74,6 +75,7 @@ async function findValidFilePath(
 
   return null
 }
+
 async function updateApplicationTagInFile(filePath: string, tag: string): Promise<void> {
   const encoding = 'utf-8'
 

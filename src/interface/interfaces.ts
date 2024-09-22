@@ -8,6 +8,14 @@ export interface Inputs {
   tag: string
   branchName: string
   retries: string
+  createPr: boolean
+}
+
+export interface GithubContext {
+  owner: string
+  repo: string
+  octokit: ReturnType<typeof github.getOctokit>
+  g: ReturnType<typeof github.getOctokit>['rest']['git']
 }
 
 export type RestGitClient = ReturnType<(typeof github)['getOctokit']>['rest']['git']

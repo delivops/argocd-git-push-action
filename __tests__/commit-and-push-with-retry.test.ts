@@ -1,8 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as backoff from 'exponential-backoff'
-import { commitAndPushChanges } from '../src/utils/commit-and-push-changes'
-import { commitAndPushWithRetry } from '../src/utils/commit-and-push-with-retry'
+import { commitAndPushChanges, commitAndPushWithRetries } from '../src/utils/commit-and-push-changes'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
@@ -13,7 +12,7 @@ const mockCommitAndPushChanges = (
   commitAndPushChanges as jest.MockedFunction<typeof commitAndPushChanges>
 ).mockImplementation()
 
-describe('commitAndPushWithRetry', () => {
+describe('commitAndPush', () => {
   const filesPath = ['file1.txt', 'file2.txt']
   const branchName = 'test-branch'
   const message = 'Test commit'
@@ -42,7 +41,7 @@ describe('commitAndPushWithRetry', () => {
     mockCommitAndPushChanges.mockImplementation(async () => Promise.resolve())
     const mockBackOff = jest.spyOn(backoff, 'backOff').mockImplementation(async fn => fn())
 
-    await commitAndPushWithRetry(filesPath, branchName, message, githubToken, retries)
+    await commitAndPushWithRetries(filesPath, branchName, message, githubToken, retries)
 
     expect(core.warning).not.toHaveBeenCalled()
     expect(core.info).not.toHaveBeenCalled()
@@ -75,7 +74,7 @@ describe('commitAndPushWithRetry', () => {
       throw new Error('Maximum attempts reached')
     })
 
-    await commitAndPushWithRetry(filesPath, branchName, message, githubToken, retries)
+    await commitAndPushWithRetries(filesPath, branchName, message, githubToken, retries)
 
     expect(mockBackOff).toHaveBeenCalledTimes(1)
     expect(mockCommitAndPushChanges).toHaveBeenCalledTimes(maxAttempts)
