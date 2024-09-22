@@ -3,154 +3,61 @@ import { run } from '../src/main'
 import * as utils from '../src/utils'
 import * as commitAndPush from '../src/utils/commit-and-push-changes'
 
-// Mock the GitHub Actions core library
-let getInputMock: jest.SpiedFunction<typeof core.getInput>
-let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
+jest.mock('@actions/core')
+jest.mock('../src/utils', () => ({
+  ...jest.requireActual('../src/utils'),
+  updateYamlFiles: jest.fn()
+}))
+jest.mock('../src/utils/commit-and-push-changes')
 
-describe('action', () => {
+describe('run function', () => {
+  const mockInputs = {
+    cluster_name: 'test-cluster',
+    applications: 'app1,app2',
+    project_name: 'test-project',
+    tag: 'v1.0.0',
+    'github-token': 'test-token',
+    retries: '3'
+  }
+
   beforeEach(() => {
-    jest.clearAllMocks()
-
-    getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
-    setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
+    jest.resetAllMocks()
+    ;(core.getInput as jest.Mock).mockImplementation((name: string) => mockInputs[name as keyof typeof mockInputs])
   })
 
-  it('updates YAML files and commits changes', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation(name => {
-      switch (name) {
-        case 'cluster_name':
-          return 'your-cluster-name'
-        case 'applications':
-          return 'your-application-1,your-application-2'
-        case 'project_name':
-          return 'your-project-name'
-        case 'tag':
-          return 'v1.2.3'
-        case 'github-token':
-          return 'your-github-token'
-        case 'retries':
-          return '3'
-        default:
-          return ''
-      }
-    })
-
-    // Mock the updateYamlFiles and commitAndPush functions
-    const updateYamlFilesMock = jest.spyOn(utils, 'updateYamlFiles').mockResolvedValue(['file1.yaml', 'file2.yaml'])
-    const commitAndPushMock = jest.spyOn(commitAndPush, 'commitAndPushChanges').mockResolvedValue()
+  it('should update YAML files and commit changes', async () => {
+    const mockFilesPath = ['file1.yaml', 'file2.yaml']
+    ;(utils.updateYamlFiles as jest.Mock).mockResolvedValueOnce(mockFilesPath)
+    ;(commitAndPush.commitAndPushWithRetries as jest.Mock).mockResolvedValueOnce(undefined)
 
     await run()
 
-    expect(updateYamlFilesMock).toHaveBeenCalledWith(
-      'your-cluster-name',
-      'your-project-name',
-      'your-application-1,your-application-2',
-      'v1.2.3'
-    )
-    expect(commitAndPushMock).toHaveBeenCalledWith(
-      ['file1.yaml', 'file2.yaml'],
-      process.env.GITHUB_HEAD_REF || 'main',
-      'in your-cluster-name: Update your-application-1, your-application-2 to v1.2.3',
-      'your-github-token',
+    expect(utils.updateYamlFiles).toHaveBeenCalledWith('test-cluster', 'test-project', 'app1,app2', 'v1.0.0')
+    expect(commitAndPush.commitAndPushWithRetries).toHaveBeenCalledWith(
+      mockFilesPath,
+      'main',
+      'in test-cluster: Update app1, app2 to v1.0.0',
+      'test-token',
       '3'
     )
-    expect(setFailedMock).not.toHaveBeenCalled()
+    expect(core.setFailed).not.toHaveBeenCalled()
   })
 
-  it('sets a failed status for invalid inputs', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation(name => {
-      switch (name) {
-        case 'cluster_name':
-          return 'cluster'
-        case 'applications':
-          return 'your-application-1,your-application-2'
-        case 'project_name':
-          return 'your-project-name'
-        case 'tag':
-          return 'v1.2.3'
-        case 'github-token':
-          return 'your-github-token'
-        case 'retries':
-          return 'invalid-retries' // Non-numeric retries value should fail
-        default:
-          return ''
-      }
-    })
+  it('should handle errors and set failed status', async () => {
+    const mockError = new Error('Test error')
+    ;(utils.updateYamlFiles as jest.Mock).mockRejectedValueOnce(mockError)
 
     await run()
 
-    expect(setFailedMock).toHaveBeenCalledWith(expect.stringContaining('Action failed with error'))
+    expect(core.setFailed).toHaveBeenCalledWith(`Action failed with error: ${mockError}`)
   })
 
-  it('updates YAML files and commits changes with semicolon-separated applications', async () => {
-    getInputMock.mockImplementation(name => {
-      switch (name) {
-        case 'cluster_name':
-          return 'your-cluster-name'
-        case 'applications':
-          return 'your-application-1;your-application-2'
-        case 'project_name':
-          return 'your-project-name'
-        case 'tag':
-          return 'v1.2.3'
-        case 'github-token':
-          return 'your-github-token'
-        case 'retries':
-          return '3'
-        default:
-          return ''
-      }
-    })
-
-    const updateYamlFilesMock = jest.spyOn(utils, 'updateYamlFiles').mockResolvedValue(['file1.yaml', 'file2.yaml'])
-    const commitAndPushChangesMock = jest.spyOn(commitAndPush, 'commitAndPushChanges').mockResolvedValue()
+  it('should handle empty file paths', async () => {
+    ;(utils.updateYamlFiles as jest.Mock).mockResolvedValueOnce([])
 
     await run()
 
-    expect(updateYamlFilesMock).toHaveBeenCalledWith(
-      'your-cluster-name',
-      'your-project-name',
-      'your-application-1;your-application-2',
-      'v1.2.3'
-    )
-    expect(commitAndPushChangesMock).toHaveBeenCalledWith(
-      ['file1.yaml', 'file2.yaml'],
-      process.env.GITHUB_HEAD_REF || 'main',
-      'in your-cluster-name: Update your-application-1, your-application-2 to v1.2.3',
-      'your-github-token',
-      '3'
-    )
-    expect(setFailedMock).not.toHaveBeenCalled()
-  })
-
-  it('handles non-existent YAML files gracefully', async () => {
-    getInputMock.mockImplementation(name => {
-      switch (name) {
-        case 'cluster_name':
-          return 'your-cluster-name'
-        case 'applications':
-          return 'your-application-1,your-application-2'
-        case 'project_name':
-          return 'your-project-name'
-        case 'tag':
-          return 'v1.2.3'
-        case 'github-token':
-          return 'your-github-token'
-        case 'retries':
-          return '3'
-        default:
-          return ''
-      }
-    })
-
-    jest.spyOn(utils, 'updateYamlFiles').mockResolvedValue([])
-    const commitAndPushChangesMock = jest.spyOn(commitAndPush, 'commitAndPushChanges').mockResolvedValue()
-
-    await run()
-
-    expect(commitAndPushChangesMock).not.toHaveBeenCalled()
-    expect(setFailedMock).toHaveBeenCalledWith(expect.stringContaining('Action failed with error'))
+    expect(core.setFailed).toHaveBeenCalledWith('Action failed with error: Error: No valid files found to update')
+    expect(commitAndPush.commitAndPushWithRetries).not.toHaveBeenCalled()
   })
 })

@@ -8,7 +8,6 @@ export interface Inputs {
   tag: string
   branchName: string
   retries: string
-  createPr: boolean
 }
 
 export interface GithubContext {

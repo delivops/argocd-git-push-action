@@ -33,6 +33,7 @@ extends:
   - plugin:@typescript-eslint/recommended
   - plugin:github/recommended
   - plugin:jest/recommended
+  - plugin:prettier/recommended
 
 rules:
   {

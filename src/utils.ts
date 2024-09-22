@@ -12,18 +12,21 @@ export function getInputs(): Inputs {
     githubToken: core.getInput('github-token', { required: true }),
     tag: core.getInput('tag', { required: true }),
     branchName: process.env.GITHUB_HEAD_REF || 'main',
-    retries: core.getInput('retries') ?? '1',
-    createPr: core.getInput('create_pr') === 'true'
+    retries: core.getInput('retries') ?? '1'
   } as const
 
-  if (!inputs.clusterName || !inputs.applications || !inputs.projectName || !inputs.githubToken || !inputs.tag) {
-    core.setFailed('Action failed with error: Missing required inputs.')
-  }
-  if (!parseInt(inputs.retries, 10)) {
-    core.setFailed('Action failed with error: Invalid retries value.')
-  }
+  validateInputs(inputs)
 
   return inputs
+}
+
+export function validateInputs(inputs: Inputs): void {
+  if (!inputs.clusterName || !inputs.applications || !inputs.projectName || !inputs.githubToken || !inputs.tag) {
+    throw new Error('Missing required inputs.')
+  }
+  if (!parseInt(inputs.retries, 10)) {
+    throw new Error('Invalid retries value.')
+  }
 }
 
 export async function updateYamlFiles(
@@ -42,20 +45,20 @@ export async function updateYamlFiles(
     if (applicationFilePath) {
       try {
         await updateApplicationTagInFile(applicationFilePath, tag)
-        foundClustersFolderName = applicationFilePath.split('/')[0] // Save the folder name for the next iteration
+        foundClustersFolderName = applicationFilePath.split('/')[0]
+        filesPath.push(applicationFilePath)
       } catch (error) {
-        core.setFailed(`Failed to update yaml file ${applicationFilePath}: ${error}`)
+        core.warning(`Failed to update yaml file ${applicationFilePath}: ${error}`)
       }
-      filesPath.push(applicationFilePath)
     } else {
-      core.setFailed(`No valid folder found for application ${application}`)
+      core.warning(`No valid folder found for application ${application}`)
     }
   }
 
   return filesPath
 }
 
-async function findValidFilePath(
+export async function findValidFilePath(
   clusterName: string,
   projectName: string,
   application: string,
@@ -69,38 +72,31 @@ async function findValidFilePath(
       await fs.access(filePath, fs.constants.F_OK)
       return filePath
     } catch (error) {
-      core.warning(`File ${filePath} not accessible: ${error}. Trying a different cluster folder.`)
+      core.debug(`File ${filePath} not accessible: ${error}. Trying a different cluster folder.`)
     }
   }
 
   return null
 }
 
-async function updateApplicationTagInFile(filePath: string, tag: string): Promise<void> {
+export async function updateApplicationTagInFile(filePath: string, tag: string): Promise<void> {
   const encoding = 'utf-8'
 
   core.info(`Updating application tag in file ${filePath} to ${tag}.`)
 
-  try {
-    const fileContents = await fs.readFile(filePath, encoding)
-    const data = yaml.parseDocument(fileContents)
-    const imageTagPath = 'spec.source.helm.valuesObject.image.tag'
-    const imageTagNode = data.getIn(imageTagPath.split('.'))
+  const fileContents = await fs.readFile(filePath, encoding)
+  const data = yaml.parseDocument(fileContents)
+  const imageTagPath = 'spec.source.helm.valuesObject.image.tag'
+  const imageTagNode = data.getIn(imageTagPath.split('.'))
 
-    if (imageTagNode === undefined || typeof imageTagNode !== 'string') {
-      const message = `The path ${imageTagPath} does not exist or is not a string in file ${filePath}`
-      core.warning(message)
-      throw new Error(message)
-    }
-
-    data.setIn(imageTagPath.split('.'), tag)
-    const newYaml = data.toString()
-    core.info(`New YAML content for ${filePath}: \n${newYaml}`)
-    await fs.writeFile(filePath, newYaml, encoding)
-  } catch (error) {
-    core.warning(`Failed to update application tag in file ${filePath}: ${error}`)
-    throw error
+  if (imageTagNode === undefined || typeof imageTagNode !== 'string') {
+    throw new Error(`The path ${imageTagPath} does not exist or is not a string in file ${filePath}`)
   }
+
+  data.setIn(imageTagPath.split('.'), tag)
+  const newYaml = data.toString()
+  core.debug(`New YAML content for ${filePath}: \n${newYaml}`)
+  await fs.writeFile(filePath, newYaml, encoding)
 }
 
 export const splitApplications = (applications: string): string[] => {

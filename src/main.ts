@@ -4,7 +4,7 @@ import { commitAndPushWithRetries } from './utils/commit-and-push-changes'
 
 export async function run(): Promise<void> {
   try {
-    const { clusterName, projectName, applications, tag, branchName, githubToken, retries, createPr } = getInputs()
+    const { clusterName, projectName, applications, tag, branchName, githubToken, retries } = getInputs()
 
     core.info(`Updating YAML files for applications: ${applications}`)
     const filesPath = await updateYamlFiles(clusterName, projectName, applications, tag)
