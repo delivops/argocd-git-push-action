@@ -38,4 +38,6 @@ jobs:
 
       - name: Run Tests
         id: test
+        env:
+          GITHUB_HEAD_REF: main
         run: yarn ci-test
