@@ -29668,7 +29668,7 @@ async function run() {
         if (filesPath.length === 0) {
             throw new Error('No valid files found to update');
         }
-        const message = `in ${clusterName}: Update ${(0, utils_1.splitApplications)(applications).join(', ')} to ${tag}`;
+        const message = `in ${clusterName}: Update ${(0, utils_1.splitApplications)(applications).join(', ')} to ${tag} [skip ci]`;
         core.info(`Committing and pushing changes with message: "${message}"`);
         await (0, commit_and_push_with_retry_1.commitAndPushWithRetry)(filesPath, branchName, message, githubToken, retries);
     }

@@ -51,7 +51,7 @@ describe('action', () => {
     expect(commitAndPushWithRetryMock).toHaveBeenCalledWith(
       ['file1.yaml', 'file2.yaml'],
       process.env.GITHUB_HEAD_REF || 'main',
-      'in your-cluster-name: Update your-application-1, your-application-2 to v1.2.3',
+      'in your-cluster-name: Update your-application-1, your-application-2 to v1.2.3 [skip ci]',
       'your-github-token',
       '3'
     )
@@ -118,7 +118,7 @@ describe('action', () => {
     expect(commitAndPushChangesMock).toHaveBeenCalledWith(
       ['file1.yaml', 'file2.yaml'],
       process.env.GITHUB_HEAD_REF || 'main',
-      'in your-cluster-name: Update your-application-1, your-application-2 to v1.2.3',
+      'in your-cluster-name: Update your-application-1, your-application-2 to v1.2.3 [skip ci]',
       'your-github-token',
       '3'
     )
