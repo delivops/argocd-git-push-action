@@ -13,7 +13,7 @@ export async function run(): Promise<void> {
       throw new Error('No valid files found to update')
     }
 
-    const message = `in ${clusterName}: Update ${splitApplications(applications).join(', ')} to ${tag}`
+    const message = `in ${clusterName}: Update ${splitApplications(applications).join(', ')} to ${tag} [skip ci]`
     core.info(`Committing and pushing changes with message: "${message}"`)
 
     await commitAndPushWithRetry(filesPath, branchName, message, githubToken, retries)
