@@ -30367,11 +30367,14 @@ const core = __importStar(__nccwpck_require__(7484));
 const utils_1 = __nccwpck_require__(1798);
 const commit_and_push_with_retry_1 = __nccwpck_require__(8549);
 async function run() {
-    core.info('Sleeping for 60 seconds before starting');
+    core.info('Sleeping for 30 seconds before starting');
     // Add this function to sleep for a specified number of milliseconds
     const sleep = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    // Sleep for 60 seconds before retrying
-    await sleep(60000);
+    // Sleep for 30 seconds before retrying
+    for (let i = 0; i < 30; i++) {
+        await sleep(1000);
+        core.info(`Sleeping for ${i + 1} seconds`);
+    }
     try {
         const { clusterName, projectName, applications, tag, branchName, githubToken, retries } = (0, utils_1.getInputs)();
         core.info(`Updating YAML files for applications: ${applications}`);

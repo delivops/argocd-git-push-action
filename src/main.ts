@@ -3,12 +3,15 @@ import { getInputs, splitApplications, updateYamlFiles } from './utils'
 import { commitAndPushWithRetry } from './utils/commit-and-push-with-retry'
 
 export async function run(): Promise<void> {
-  core.info('Sleeping for 60 seconds before starting')
 
+  core.info('Sleeping for 30 seconds before starting')
   // Add this function to sleep for a specified number of milliseconds
   const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms))
-  // Sleep for 60 seconds before retrying
-  await sleep(60000)
+  // Sleep for 30 seconds before retrying
+  for (let i = 0; i < 30; i++) {
+    await sleep(1000)
+    core.info(`Sleeping for ${i + 1} seconds`)
+  }
 
   try {
     const { clusterName, projectName, applications, tag, branchName, githubToken, retries } = getInputs()
