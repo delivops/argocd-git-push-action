@@ -30547,6 +30547,7 @@ async function commitAndPushChanges(g, owner, repo, ref, filesPath, message) {
     const commitSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref);
     const baseTree = await GitUtils.getBaseTree(g, owner, repo, commitSha);
     const treeSha = await GitUtils.createFilesTree(g, owner, repo, filesPath, baseTree);
+    const commitShaNew = await GitUtils.createCommit(g, owner, repo, message, treeSha, commitSha);
     core.info('Sleeping for 30 seconds before starting');
     // Add this function to sleep for a specified number of milliseconds
     const sleep = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -30555,7 +30556,6 @@ async function commitAndPushChanges(g, owner, repo, ref, filesPath, message) {
         await sleep(1000);
         core.info(`Sleeping for ${i + 1} seconds`);
     }
-    const commitShaNew = await GitUtils.createCommit(g, owner, repo, message, treeSha, commitSha);
     const latestSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref);
     let sha = commitShaNew;
     // let force = false
