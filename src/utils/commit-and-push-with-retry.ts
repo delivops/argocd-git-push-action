@@ -4,9 +4,6 @@ import { BackoffOptions, backOff } from 'exponential-backoff'
 import { config } from '../config'
 import { commitAndPushChanges } from './commit-and-push-changes'
 
-// Add this function to sleep for a specified number of milliseconds
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-
 export async function commitAndPushWithRetry(
   filesPath: string[],
   branchName: string,
@@ -19,9 +16,6 @@ export async function commitAndPushWithRetry(
   const g = octokit.rest.git
   const ref = `heads/${branchName}`
   const maxAttempts = parseInt(retries, 10) + 1 // Include the initial attempt
-
-  // Sleep for 60 seconds before retrying
-  await sleep(60000)
 
   const options: BackoffOptions = {
     numOfAttempts: maxAttempts, // Include the initial attempt
