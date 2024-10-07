@@ -19,6 +19,7 @@ describe('run function', () => {
     project_name: 'test-project',
     tag: 'v1.0.0',
     'github-token': 'test-token',
+    branchName: 'test-branch',
     retries: '3'
   }
 
@@ -37,7 +38,7 @@ describe('run function', () => {
     expect(utils.updateYamlFiles).toHaveBeenCalledWith('test-cluster', 'test-project', 'app1,app2', 'v1.0.0')
     expect(commitAndPush.commitAndPushWithRetries).toHaveBeenCalledWith(
       mockFilesPath,
-      'main',
+      'test-branch',
       'in test-cluster: Update app1, app2 to v1.0.0',
       'test-token',
       '3'
