@@ -17,14 +17,18 @@ export async function commitAndPushChanges(
   const latestSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref)
 
   let sha = commitShaNew
-  let force = false
+  // let force = false
   if (latestSha !== commitSha) {
     console.warn('The branch has been updated since we last fetched the latest commit sha.')
     // Rebasing the changes on top of the latest commit
     sha = await GitUtils.createCommit(g, owner, repo, message, treeSha, latestSha)
-    force = true
+    // force = true;
   }
 
-  await g.updateRef({ owner, repo, ref, sha, force })
-  core.info('Successfully committed and pushed changes.')
+  try {
+    await g.updateRef({ owner, repo, ref, sha }) // force
+    core.info('Successfully committed and pushed changes.')
+  } catch (error) {
+    throw new Error(`Failed to commit and push changes: ${error}`)
+  }
 }
