@@ -22,7 +22,7 @@ export async function commitAndPushChanges(
     console.warn('The branch has been updated since we last fetched the latest commit sha.')
     // Rebasing the changes on top of the latest commit
     sha = await GitUtils.createCommit(g, owner, repo, message, treeSha, latestSha)
-    force = true
+    // force = true;
   }
 
   await g.updateRef({ owner, repo, ref, sha, force })
