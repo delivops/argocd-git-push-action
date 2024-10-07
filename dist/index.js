@@ -30557,11 +30557,11 @@ async function commitAndPushChanges(g, owner, repo, ref, filesPath, message) {
         sha = await GitUtils.createCommit(g, owner, repo, message, treeSha, latestSha);
         // force = true;
     }
-    core.info('Sleeping for 20 seconds before starting');
+    core.info('Sleeping for 15 seconds before starting');
     // Add this function to sleep for a specified number of milliseconds
     const sleep = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    // Sleep for 20 seconds before retrying
-    for (let i = 0; i < 20; i++) {
+    // Sleep for 15 seconds before retrying
+    for (let i = 0; i < 15; i++) {
         await sleep(1000);
         core.info(`Sleeping for ${i + 1} seconds`);
     }
