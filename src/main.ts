@@ -6,9 +6,9 @@ export async function run(): Promise<void> {
   core.info('Sleeping for 60 seconds before starting')
 
   // Add this function to sleep for a specified number of milliseconds
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+  // const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms))
   // Sleep for 60 seconds before retrying
-  await sleep(60000)
+  // await sleep(60000)
 
   try {
     const { clusterName, projectName, applications, tag, branchName, githubToken, retries } = getInputs()
