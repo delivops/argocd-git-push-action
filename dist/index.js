@@ -30369,9 +30369,9 @@ const commit_and_push_with_retry_1 = __nccwpck_require__(8549);
 async function run() {
     core.info('Sleeping for 60 seconds before starting');
     // Add this function to sleep for a specified number of milliseconds
-    // const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms))
+    const sleep = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
     // Sleep for 60 seconds before retrying
-    // await sleep(60000)
+    await sleep(60000);
     try {
         const { clusterName, projectName, applications, tag, branchName, githubToken, retries } = (0, utils_1.getInputs)();
         core.info(`Updating YAML files for applications: ${applications}`);
