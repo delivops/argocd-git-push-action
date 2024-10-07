@@ -30548,14 +30548,6 @@ async function commitAndPushChanges(g, owner, repo, ref, filesPath, message) {
     const baseTree = await GitUtils.getBaseTree(g, owner, repo, commitSha);
     const treeSha = await GitUtils.createFilesTree(g, owner, repo, filesPath, baseTree);
     const commitShaNew = await GitUtils.createCommit(g, owner, repo, message, treeSha, commitSha);
-    core.info('Sleeping for 20 seconds before starting');
-    // Add this function to sleep for a specified number of milliseconds
-    const sleep = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    // Sleep for 20 seconds before retrying
-    for (let i = 0; i < 20; i++) {
-        await sleep(1000);
-        core.info(`Sleeping for ${i + 1} seconds`);
-    }
     const latestSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref);
     let sha = commitShaNew;
     // let force = false
@@ -30564,6 +30556,14 @@ async function commitAndPushChanges(g, owner, repo, ref, filesPath, message) {
         // Rebasing the changes on top of the latest commit
         sha = await GitUtils.createCommit(g, owner, repo, message, treeSha, latestSha);
         // force = true;
+    }
+    core.info('Sleeping for 20 seconds before starting');
+    // Add this function to sleep for a specified number of milliseconds
+    const sleep = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    // Sleep for 20 seconds before retrying
+    for (let i = 0; i < 20; i++) {
+        await sleep(1000);
+        core.info(`Sleeping for ${i + 1} seconds`);
     }
     await g.updateRef({ owner, repo, ref, sha }); // force
     core.info('Successfully committed and pushed changes.');
