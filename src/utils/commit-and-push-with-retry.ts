@@ -5,7 +5,7 @@ import { config } from '../config'
 import { commitAndPushChanges } from './commit-and-push-changes'
 
 // Add this function to sleep for a specified number of milliseconds
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export async function commitAndPushWithRetry(
   filesPath: string[],
@@ -20,6 +20,9 @@ export async function commitAndPushWithRetry(
   const ref = `heads/${branchName}`
   const maxAttempts = parseInt(retries, 10) + 1 // Include the initial attempt
 
+  // Sleep for 60 seconds before retrying
+  await sleep(60000)
+
   const options: BackoffOptions = {
     numOfAttempts: maxAttempts, // Include the initial attempt
     startingDelay: 1000 * config.BASE_BACKOFF_TIME_IN_SEC, // 5 seconds
@@ -29,10 +32,7 @@ export async function commitAndPushWithRetry(
     retry: async (error, attemptNumber) => {
       core.warning(`Attempt ${attemptNumber} failed with error: ${error}`)
       core.info(`Retrying... (${maxAttempts - attemptNumber} attempt(s) remaining)`)
-      
-      // Sleep for 60 seconds before retrying
-      await sleep(60000);
-      
+
       return true // Retry on all errors
     }
   }
