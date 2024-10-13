@@ -39,7 +39,7 @@ describe('run function', () => {
     expect(commitAndPush.commitAndPushWithRetries).toHaveBeenCalledWith(
       mockFilesPath,
       'main',
-      'in test-cluster: Update app1, app2 to v1.0.0',
+      'in test-cluster: Update app1, app2 to v1.0.0 [skip ci]',
       'test-token',
       '3'
     )
