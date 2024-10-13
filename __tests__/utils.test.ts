@@ -13,6 +13,7 @@ jest.mock('../src/utils', () => ({
 jest.mock('../src/utils/commit-and-push-changes')
 
 describe('run function', () => {
+  process.env.GITHUB_HEAD_REF = 'test-branch'
   const mockInputs = {
     cluster_name: 'test-cluster',
     applications: 'app1,app2',
@@ -38,7 +39,7 @@ describe('run function', () => {
     expect(utils.updateYamlFiles).toHaveBeenCalledWith('test-cluster', 'test-project', 'app1,app2', 'v1.0.0')
     expect(commitAndPush.commitAndPushWithRetries).toHaveBeenCalledWith(
       mockFilesPath,
-      'main',
+      'test-branch',
       'in test-cluster: Update app1, app2 to v1.0.0 [skip ci]',
       'test-token',
       '3'
