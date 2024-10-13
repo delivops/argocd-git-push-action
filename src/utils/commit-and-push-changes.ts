@@ -35,12 +35,12 @@ export async function commitAndPushChanges(
   const treeSha = await GitUtils.createFilesTree(g, owner, repo, filesPath, baseTree)
   const newCommitSha = await GitUtils.createCommit(g, owner, repo, message, treeSha, commitSha)
 
-  await updateRefWithRetry(g, owner, repo, ref, newCommitSha, commitSha)
+  await updateRef(g, owner, repo, ref, newCommitSha, commitSha)
 
   core.info('Successfully committed and pushed changes.')
 }
 
-async function updateRefWithRetry(
+async function updateRef(
   g: RestGitClient,
   owner: string,
   repo: string,

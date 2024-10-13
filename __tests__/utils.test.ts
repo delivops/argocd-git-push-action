@@ -38,7 +38,7 @@ describe('run function', () => {
     expect(utils.updateYamlFiles).toHaveBeenCalledWith('test-cluster', 'test-project', 'app1,app2', 'v1.0.0')
     expect(commitAndPush.commitAndPushWithRetries).toHaveBeenCalledWith(
       mockFilesPath,
-      'test-branch',
+      'main',
       'in test-cluster: Update app1, app2 to v1.0.0',
       'test-token',
       '3'
