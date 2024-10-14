@@ -53,7 +53,7 @@ async function updateRef(
   if (latestSha !== originalCommitSha) {
     core.warning('The branch has been updated since we last fetched the latest commit sha.')
     const updatedCommitSha = await GitUtils.createCommit(g, owner, repo, 'Rebased commit', newCommitSha, latestSha)
-    await g.updateRef({ owner, repo, ref, sha: updatedCommitSha, force: true })
+    await g.updateRef({ owner, repo, ref, sha: updatedCommitSha })
   } else {
     await g.updateRef({ owner, repo, ref, sha: newCommitSha })
   }
