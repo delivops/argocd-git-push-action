@@ -54,7 +54,7 @@ async function updateRef(
     core.warning('The branch has been updated since we last fetched the latest commit sha.')
     const updatedCommitSha = await GitUtils.createCommit(g, owner, repo, 'Rebased commit', newCommitSha, latestSha)
 
-    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+    const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms))
     for (let i = 0; i < 10; i++) {
       await sleep(1000)
       core.info(`Waiting for the branch to be updated... (${i + 1}/10)`)
