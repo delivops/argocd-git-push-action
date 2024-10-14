@@ -35,6 +35,12 @@ export async function commitAndPushChanges(
   const treeSha = await GitUtils.createFilesTree(g, owner, repo, filesPath, baseTree)
   const newCommitSha = await GitUtils.createCommit(g, owner, repo, message, treeSha, commitSha)
 
+  const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms))
+  for (let i = 0; i < 10; i++) {
+    await sleep(1000)
+    core.info(`Waiting for the branch to be updated... (${i + 1}/10)`)
+  }
+
   await updateRef(g, owner, repo, ref, newCommitSha, commitSha)
 
   core.info('Successfully committed and pushed changes.')
@@ -53,12 +59,6 @@ async function updateRef(
   if (latestSha !== originalCommitSha) {
     core.warning('The branch has been updated since we last fetched the latest commit sha.')
     const updatedCommitSha = await GitUtils.createCommit(g, owner, repo, 'Rebased commit', newCommitSha, latestSha)
-
-    const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms))
-    for (let i = 0; i < 10; i++) {
-      await sleep(1000)
-      core.info(`Waiting for the branch to be updated... (${i + 1}/10)`)
-    }
 
     await g.updateRef({ owner, repo, ref, sha: updatedCommitSha })
   } else {
