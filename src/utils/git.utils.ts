@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises'
-import { RestGitClient } from '../interfaces'
+import { RestGitClient } from '../interface/interfaces'
 
 export async function getLatestCommitSha(g: RestGitClient, owner: string, repo: string, ref: string): Promise<string> {
   const {

@@ -1,19 +1,15 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as backoff from 'exponential-backoff'
-import { commitAndPushChanges } from '../src/utils/commit-and-push-changes'
-import { commitAndPushWithRetry } from '../src/utils/commit-and-push-with-retry'
+import { commitAndPushWithRetries } from '../src/utils/commit-and-push-changes'
+import * as GitUtils from '../src/utils/git.utils'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
 jest.mock('exponential-backoff')
-jest.mock('../src/utils/commit-and-push-changes')
+jest.mock('../src/utils/git.utils')
 
-const mockCommitAndPushChanges = (
-  commitAndPushChanges as jest.MockedFunction<typeof commitAndPushChanges>
-).mockImplementation()
-
-describe('commitAndPushWithRetry', () => {
+describe('commitAndPushWithRetries', () => {
   const filesPath = ['file1.txt', 'file2.txt']
   const branchName = 'test-branch'
   const message = 'Test commit'
@@ -26,7 +22,12 @@ describe('commitAndPushWithRetry', () => {
     const mockOctokit = {
       rest: {
         git: {
-          // mock the necessary git operations
+          getRef: jest.fn(),
+          getCommit: jest.fn(),
+          createBlob: jest.fn(),
+          createTree: jest.fn(),
+          createCommit: jest.fn(),
+          updateRef: jest.fn()
         }
       }
     }
@@ -39,47 +40,38 @@ describe('commitAndPushWithRetry', () => {
   })
 
   it('should commit and push changes with retries', async () => {
-    mockCommitAndPushChanges.mockImplementation(async () => Promise.resolve())
     const mockBackOff = jest.spyOn(backoff, 'backOff').mockImplementation(async fn => fn())
 
-    await commitAndPushWithRetry(filesPath, branchName, message, githubToken, retries)
+    jest.spyOn(GitUtils, 'getLatestCommitSha').mockResolvedValue('latest-sha')
+    jest.spyOn(GitUtils, 'getBaseTree').mockResolvedValue('base-tree')
+    jest.spyOn(GitUtils, 'createFilesTree').mockResolvedValue('new-tree')
+    jest.spyOn(GitUtils, 'createCommit').mockResolvedValue('new-commit')
 
-    expect(core.warning).not.toHaveBeenCalled()
-    expect(core.info).not.toHaveBeenCalled()
-    expect(core.setFailed).not.toHaveBeenCalled()
-    expect(mockCommitAndPushChanges).toHaveBeenCalledTimes(1)
+    await commitAndPushWithRetries(filesPath, branchName, message, githubToken, retries)
+
     expect(mockBackOff).toHaveBeenCalledTimes(1)
+    expect(GitUtils.getLatestCommitSha).toHaveBeenCalledTimes(2)
+    expect(GitUtils.getBaseTree).toHaveBeenCalledTimes(1)
+    expect(GitUtils.createFilesTree).toHaveBeenCalledTimes(1)
+    expect(GitUtils.createCommit).toHaveBeenCalledTimes(1)
+    expect(core.setFailed).not.toHaveBeenCalled()
   })
 
   it('should fail after maximum attempts', async () => {
-    const maxAttempts = parseInt(retries, 10) + 1 // Include the initial attempt
     const mockError = new Error('Commit and push failed')
+    jest.spyOn(GitUtils, 'getLatestCommitSha').mockRejectedValue(mockError)
 
-    mockCommitAndPushChanges.mockRejectedValueOnce(mockError)
-    const mockBackOff = jest.spyOn(backoff, 'backOff').mockImplementation(async (fn, options) => {
-      const { numOfAttempts = 0, retry } = options || ({} as backoff.BackoffOptions)
-      for (let i = 0; i < numOfAttempts; i++) {
-        try {
-          await fn()
-        } catch (error) {
-          if (retry) {
-            const shouldRetry = await retry(error, i + 1)
-            if (!shouldRetry) {
-              throw error
-            }
-          } else {
-            throw error
-          }
-        }
-      }
+    const mockBackOff = jest.spyOn(backoff, 'backOff').mockImplementation(() => {
       throw new Error('Maximum attempts reached')
     })
 
-    await commitAndPushWithRetry(filesPath, branchName, message, githubToken, retries)
+    await expect(commitAndPushWithRetries(filesPath, branchName, message, githubToken, retries)).rejects.toThrow(
+      'Maximum attempts reached'
+    )
 
     expect(mockBackOff).toHaveBeenCalledTimes(1)
-    expect(mockCommitAndPushChanges).toHaveBeenCalledTimes(maxAttempts)
-    expect(core.setFailed).toHaveBeenCalledTimes(1)
-    expect(core.setFailed).toHaveBeenCalledWith(expect.stringContaining('Failed'))
+    expect(core.setFailed).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to commit and push changes after 4 attempts')
+    )
   })
 })

@@ -26,7 +26,6 @@ export async function commitAndPushWithRetry(
     retry: async (error, attemptNumber) => {
       core.warning(`Attempt ${attemptNumber} failed with error: ${error}`)
       core.info(`Retrying... (${maxAttempts - attemptNumber} attempt(s) remaining)`)
-
       return true // Retry on all errors
     }
   }
