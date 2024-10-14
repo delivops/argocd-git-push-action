@@ -30555,11 +30555,6 @@ async function commitAndPushChanges(g, owner, repo, ref, filesPath, message) {
     const baseTree = await GitUtils.getBaseTree(g, owner, repo, commitSha);
     const treeSha = await GitUtils.createFilesTree(g, owner, repo, filesPath, baseTree);
     const newCommitSha = await GitUtils.createCommit(g, owner, repo, message, treeSha, commitSha);
-    const sleep = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    for (let i = 0; i < 10; i++) {
-        await sleep(1500);
-        core.info(`Waiting for the branch to be updated... (${i + 1}/10)`);
-    }
     await updateRef(g, owner, repo, ref, newCommitSha, commitSha);
     core.info('Successfully committed and pushed changes.');
 }
