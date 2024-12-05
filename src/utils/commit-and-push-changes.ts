@@ -16,7 +16,10 @@ export async function commitAndPushWithRetries(
   const maxAttempts = parseInt(retries, 10) + 1
 
   await retryOperation(
-    async () => await commitAndPushChanges(g, owner, repo, ref, filesPath, message),
+    async () => {
+      const latestCommitSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref)
+      await commitAndPushChanges(g, owner, repo, ref, filesPath, message, latestCommitSha)
+    },
     { maxAttempts },
     'Failed to commit and push changes'
   )
@@ -28,9 +31,10 @@ export async function commitAndPushChanges(
   repo: string,
   ref: string,
   filesPath: string[],
-  message: string
+  message: string,
+  latestCommitSha: string
 ): Promise<void> {
-  const commitSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref)
+  const commitSha = latestCommitSha
   const baseTree = await GitUtils.getBaseTree(g, owner, repo, commitSha)
   const treeSha = await GitUtils.createFilesTree(g, owner, repo, filesPath, baseTree)
   const newCommitSha = await GitUtils.createCommit(g, owner, repo, message, treeSha, commitSha)
@@ -47,12 +51,18 @@ async function updateRef(
   newCommitSha: string,
   originalCommitSha: string
 ): Promise<void> {
-  const latestSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref)
+  await retryOperation(
+    async () => {
+      const latestSha = await GitUtils.getLatestCommitSha(g, owner, repo, ref)
 
-  if (latestSha !== originalCommitSha) {
-    core.warning('The branch has been updated since we last fetched the latest commit sha.')
-    throw new Error('The branch has been updated since we last fetched the latest commit sha.')
-  } else {
-    await g.updateRef({ owner, repo, ref, sha: newCommitSha })
-  }
+      if (latestSha !== originalCommitSha) {
+        core.warning('The branch has been updated since we last fetched the latest commit sha.')
+        throw new Error('The branch has been updated since we last fetched the latest commit sha.')
+      } else {
+        await g.updateRef({ owner, repo, ref, sha: newCommitSha })
+      }
+    },
+    { maxAttempts: 3 },
+    'Failed to update reference'
+  )
 }
