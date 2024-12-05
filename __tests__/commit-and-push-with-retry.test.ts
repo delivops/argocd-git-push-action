@@ -52,7 +52,7 @@ describe('commitAndPushWithRetries', () => {
     expect(mockBackOff).toHaveBeenCalledTimes(1)
     expect(GitUtils.getLatestCommitSha).toHaveBeenCalledTimes(2)
     expect(GitUtils.getBaseTree).toHaveBeenCalledTimes(1)
-    expect(GitUtils.createFilesTree).toHaveBeenCalledTimes(1)
+    expect(GitUtils.createFilesTree).toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.anything(), filesPath, expect.anything())
     expect(GitUtils.createCommit).toHaveBeenCalledTimes(1)
     expect(core.setFailed).not.toHaveBeenCalled()
   })
@@ -73,5 +73,24 @@ describe('commitAndPushWithRetries', () => {
     expect(core.setFailed).toHaveBeenCalledWith(
       expect.stringContaining('Failed to commit and push changes after 4 attempts')
     )
+  })
+
+  it('should handle parallel actions operating on different files', async () => {
+    const mockBackOff = jest.spyOn(backoff, 'backOff').mockImplementation(async fn => fn())
+
+    jest.spyOn(GitUtils, 'getLatestCommitSha').mockResolvedValueOnce('latest-sha')
+    jest.spyOn(GitUtils, 'getLatestCommitSha').mockResolvedValueOnce('new-latest-sha')
+    jest.spyOn(GitUtils, 'getBaseTree').mockResolvedValue('base-tree')
+    jest.spyOn(GitUtils, 'createFilesTree').mockResolvedValue('new-tree')
+    jest.spyOn(GitUtils, 'createCommit').mockResolvedValue('new-commit')
+
+    await commitAndPushWithRetries(filesPath, branchName, message, githubToken, retries)
+
+    expect(mockBackOff).toHaveBeenCalledTimes(1)
+    expect(GitUtils.getLatestCommitSha).toHaveBeenCalledTimes(2)
+    expect(GitUtils.getBaseTree).toHaveBeenCalledTimes(1)
+    expect(GitUtils.createFilesTree).toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.anything(), filesPath, expect.anything())
+    expect(GitUtils.createCommit).toHaveBeenCalledTimes(1)
+    expect(core.setFailed).not.toHaveBeenCalled()
   })
 })
