@@ -4,6 +4,12 @@
 
 This GitHub Action update your argocd application by pushing the changes to the git repository.
 
+## Bundle
+
+```shell
+devbox run bundle
+```
+
 ## Features
 
 - Synchronize an Argo CD application by pushing the changes to the git repository.
