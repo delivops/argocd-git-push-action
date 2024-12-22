@@ -92,8 +92,13 @@ export async function updateApplicationTagInFile(filePath: string, tag: string):
   if (imageTagNode === undefined || typeof imageTagNode !== 'string') {
     throw new Error(`The path ${imageTagPath} does not exist or is not a string in file ${filePath}`)
   }
-
+  
   data.setIn(imageTagPath.split('.'), tag)
+
+  const timeISO = new Date().toISOString()
+  const timePath = 'spec.source.helm.valuesObject.podAnnotations.deployTimestamp';
+  data.setIn(timePath.split('.'), timeISO);
+
   const newYaml = data.toString()
   core.debug(`New YAML content for ${filePath}: \n${newYaml}`)
   await fs.writeFile(filePath, newYaml, encoding)
